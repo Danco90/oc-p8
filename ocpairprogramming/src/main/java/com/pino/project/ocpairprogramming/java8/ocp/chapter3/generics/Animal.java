@@ -4,7 +4,6 @@ public class Animal implements Comparable<Animal> {
 	private int id;
 
 	public Animal(int id) {
-		super();
 		this.id = id;
 	}
 	
