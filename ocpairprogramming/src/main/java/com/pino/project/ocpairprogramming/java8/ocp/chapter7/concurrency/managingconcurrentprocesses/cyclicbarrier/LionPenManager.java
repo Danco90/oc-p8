@@ -25,7 +25,7 @@ public class LionPenManager {
 		try {
 			service = Executors.newFixedThreadPool(4);
 			LionPenManager manager = new LionPenManager();
-			CyclicBarrier c1 = new CyclicBarrier(4,//AT MOST as many parties (to break down) as the threads into the Pool
+			CyclicBarrier c1 = new CyclicBarrier(4,//AT MOST as many parties (limit to break down) as the threads into the Pool (size)
 					() -> System.out.println("*** first barrier c1 has finally broken down. Pen can now be cleaned"));
 			CyclicBarrier c2 = new CyclicBarrier(4/*3*/,//if less barriers than threads, the program hangs
 					() -> System.out.println("*** Pen cleaned and also barrier c2 has finally broken down. "));
