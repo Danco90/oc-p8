@@ -10,13 +10,15 @@ class DogSearch{
 	}
 	public static void main(String[]args){
 		int MAX_LENGTH = 2;
+		final int MAX_LENGTH_2 = 2;
 		DogSearch search = new DogSearch();
 		List<String> names = new ArrayList<>();
 		names.add("Lassie");
 		names.add("Benji");
 		names.add("Brian");
 		MAX_LENGTH += names.size(); //(*) doesn't compile
-		search.reduceList(names, d -> d.length() > MAX_LENGTH);
+//		search.reduceList(names, d -> d.length() > MAX_LENGTH);
+		search.reduceList(names, d -> d.length() > MAX_LENGTH_2);//only final/effective final or static
 		System.out.println(names.size());
 	}
 }

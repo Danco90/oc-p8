@@ -17,7 +17,8 @@ class Initech{
 		bosses.add(new Boss("Jenny"));
 		bosses.add(new Boss("Ted"));
 		bosses.add(new Boss("Grace"));
-		bosses.removeIf(s -> s.equalsIgnoreCase("ted")); //(*) doesn't compile
+//		bosses.removeIf(s -> s.equalsIgnoreCase("ted")); //(*) doesn't compile as s is not a String
+		bosses.removeIf(s -> s.getName().equalsIgnoreCase("ted"));
 		System.out.print(bosses);
 	}
 }
