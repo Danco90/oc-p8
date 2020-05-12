@@ -35,7 +35,7 @@ public class WaitingForAllTasksToFinish {
         		tasksList.add(() -> "Exec & retur : Callable-task-3" );
         		tasksList.add(() -> "Exec & retur : Callable-task-4" );
 			List<Future<String>> genResultList = service.invokeAll(tasksList);
-			genResultList.forEach((Future<String> s) -> {//Consumer<>
+			genResultList.forEach((Future<String> s) -> {//Consumer<T>
 				try { System.out.println(s.get());//get() throws ExecutionException
 				} catch (InterruptedException | ExecutionException e) {
 					e.printStackTrace();
@@ -51,21 +51,21 @@ public class WaitingForAllTasksToFinish {
 			} catch (ExecutionException e1) { e1.printStackTrace();
 			}
 			
+			//6- invoke a never ending task Runnable tasks
+			service.execute(() ->  {while(true);});//Submits and attemps to exec a Runnable task at some point in the future
 			
 			
 		} finally {
 			if(service != null) service.shutdown();//it might fail the shutdown
 		}
-//		if(service != null) {//if it's still up and running
-//			service.awaitTermination(1, TimeUnit.MINUTES);//If failed, it might throw an InterruptedException
-//			
+		if(service != null) {//if it's still up and running
+			service.awaitTermination(1, TimeUnit.MINUTES);//If failed,it might throw an InterruptedException
 //			// Check whether all tasks are finished
-//			
-//			if(service.isTerminated())
-//				System.out.print("All tasks finished");
-//			else
-//				System.out.print("There is at least one running task, which has not finished yet for such reason!");
-//		}
+			if(service.isTerminated())
+				System.out.print("All tasks finished");
+			else
+				System.out.print("There is at least one running task, which has not finished yet for such reason!");
+		}
 	}
 
 }
