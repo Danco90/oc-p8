@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Topic  : Waiting for Task termination
+ * Topic  : Waiting for the termination of some tasks, with shutdownNow() and awaitTermination()
  * Details: ExecutorService will not be automatically destroyed when there is not task to process. It will stay alive and wait for new tasks to do.
  * 			Therefore, the ExecutorService interface provides 3 methods for controlling the termination of tasks submitted to executor: 
  * 			- void shutdown() initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks 
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author matteodaniele
  *
  */
-public class WaitingForAllTasksToFinish {
+public class WaitingForAllTasksToFinishWithShutDownAndAwaitTermination {
 
 	public static void main(String[] args) throws InterruptedException {
 		ExecutorService service = null;
@@ -73,12 +73,7 @@ public class WaitingForAllTasksToFinish {
 			service.execute(() ->  { try{Thread.sleep(5000);}catch(InterruptedException e) {}});
 			
 		} finally {
-			if(service != null) service
-//								.shutdown();//it starts the process of shutting down only the task which have started. If fails, it throws an InterruptedException
-			                    
-								.shutdownNow();//attempts to stop all executing tasks via Thread.interrupt(), block the process of waiting for the tasks
-								//and return a list of the only RUNNABLE tasks that were supposed to be executed, but eventually they didn't started.
-								//NB: any task that fails to respond to interrupts may never terminate.
+			if(service != null) service.shutdown();//it starts the process of shutting down only the task which have started. If fails, it throws an InterruptedException
 		}
 		if(service != null) {//if it's still up and running, after a shutdown request 
 			//we try to delay the shutdown request by calling awaittermination().
