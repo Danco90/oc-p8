@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Topic  : Waiting for the termination of some tasks with shutdownNow()
+ * Topic  : Waiting for the termination of some tasks, such as a never ending one, with a simple shutdown()
  * Details: ExecutorService will not be automatically destroyed when there is not task to process. It will stay alive and wait for new tasks to do.
  * 			Therefore, the ExecutorService interface provides 3 methods for controlling the termination of tasks submitted to executor: 
  * 			- void shutdown() initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks 
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author matteodaniele
  *
  */
-public class WaitingForAllTasksToFinishWithShutdownNow extends BaseShuttingDownUsecase{
+public class WaitingForNeverendingTaskToFinishWithShutdown extends BaseShuttingDownUsecase{
 
 	public static void main(String[] args) throws InterruptedException {
 		ExecutorService service = null;
@@ -67,12 +67,13 @@ public class WaitingForAllTasksToFinishWithShutdownNow extends BaseShuttingDownU
 					System.out.println(genResult2);
 			} catch (ExecutionException e1) { e1.printStackTrace();
 			}
-			//6- invoke a Runnable task
-			service.execute(() ->  { try{Thread.sleep(5000);}catch(InterruptedException e) {}});
+			
+			//6- invoke a never ending task Runnable tasks
+			service.execute(() ->  {while(true);});//Submits and attemps to exec a Runnable task at some point in the future
 			
 		} finally {
-			shutdownNow(service);
-		}
+			shutdown(service);
+        }
 		checkExecutorStatus(service);
 	}
 

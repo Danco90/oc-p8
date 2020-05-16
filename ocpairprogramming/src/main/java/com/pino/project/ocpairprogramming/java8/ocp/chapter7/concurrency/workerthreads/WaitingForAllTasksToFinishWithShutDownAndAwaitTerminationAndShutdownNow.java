@@ -10,7 +10,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Topic  : Waiting for the termination of some tasks, such as a never ending one, with a simple shutdown()
+ * Topic  : Waiting for the termination of some tasks, with shutdownNow() and awaitTermination()
  * Details: ExecutorService will not be automatically destroyed when there is not task to process. It will stay alive and wait for new tasks to do.
  * 			Therefore, the ExecutorService interface provides 3 methods for controlling the termination of tasks submitted to executor: 
  * 			- void shutdown() initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks 
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author matteodaniele
  *
  */
-public class WaitingForAllTasksToFinishWithSimpleShutdownAndANeverendingTask {
+public class WaitingForAllTasksToFinishWithShutDownAndAwaitTerminationAndShutdownNow extends BaseShuttingDownUsecase{
 
 	public static void main(String[] args) throws InterruptedException {
 		ExecutorService service = null;
@@ -69,18 +69,13 @@ public class WaitingForAllTasksToFinishWithSimpleShutdownAndANeverendingTask {
 			}
 			
 			//6- invoke a never ending task Runnable tasks
-			service.execute(() ->  {while(true);});//Submits and attemps to exec a Runnable task at some point in the future
+//			service.execute(() ->  {while(true);});//Submits and attemps to exec a Runnable task at some point in the future
+			service.execute(() ->  { try{Thread.sleep(5000);}catch(InterruptedException e) {}});
 			
 		} finally {
-			if(service != null) service.shutdown();//it starts the process of shutting down only the task which have started. If fails, it throws an InterruptedException
-        }
-		if(service != null) {//if it's still up and running, after a shutdown request 
-			// Check whether all tasks are finished
-			if(service.isTerminated())
-				System.out.print("All tasks finished");
-			else
-				System.out.print("There is at least one running task, which has not finished yet for such reason!");//This will be Printed
+			shutdown(service);//it starts the process of shutting down only the task which have started. If fails, it throws an InterruptedException
 		}
+		awaitTerminationAndShutdownNow(service, 6, TimeUnit.SECONDS);//It might throw a checked InterruptedException
 	}
 
 }

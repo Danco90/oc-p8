@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author matteodaniele
  *
  */
-public class WaitingForAllTasksToFinishWithShutDownAndAwaitTermination {
+public class WaitingForAllTasksToFinishWithShutDownAndAwaitTermination extends BaseShuttingDownUsecase{
 
 	public static void main(String[] args) throws InterruptedException {
 		ExecutorService service = null;
@@ -73,24 +73,25 @@ public class WaitingForAllTasksToFinishWithShutDownAndAwaitTermination {
 			service.execute(() ->  { try{Thread.sleep(5000);}catch(InterruptedException e) {}});
 			
 		} finally {
-			if(service != null) service.shutdown();//it starts the process of shutting down only the task which have started. If fails, it throws an InterruptedException
+			shutdown(service);//it starts the process of shutting down only the task which have started. If fails, it throws an InterruptedException
 		}
-		if(service != null) {//if it's still up and running, after a shutdown request 
-			//we try to delay the shutdown request by calling awaittermination().
-			//NB: WE HAD BETTER call it only after simple shutdown() and absolutely NOT after shutdownNow()
-			  service.awaitTermination(6, TimeUnit.SECONDS);//it blocks until one of the following condition happens first
-			  //i) all tasks have completed execution  
-			 //ii) or the timeout occurs, 
-			//iii) or the current thread is interrupted
-			//If failed,it might throw an InterruptedException
-			//NB: TRICKY** after shutdownNow(), the calling to awaitTermination() method will definitely FAIL because of the never ending task but the InterruptedException is never THROWN! WHY ?
-			
-			// Check whether all tasks are finished
-			if(service.isTerminated())
-				System.out.print("All tasks finished");
-			else
-				System.out.print("There is at least one running task, which has not finished yet for such reason!");//This will be Printed
-		}
+//		if(service != null) {//if it's still up and running, after a shutdown request 
+//			//we try to delay the shutdown request by calling awaittermination().
+//			//NB: WE HAD BETTER call it only after simple shutdown() and absolutely NOT after shutdownNow()
+//			  service.awaitTermination(6, TimeUnit.SECONDS);//it blocks until one of the following condition happens first
+//			  //i) all tasks have completed execution  
+//			 //ii) or the timeout occurs, 
+//			//iii) or the current thread is interrupted
+//			//If failed,it might throw an InterruptedException
+//			//NB: TRICKY** after shutdownNow(), the calling to awaitTermination() method will definitely FAIL because of the never ending task but the InterruptedException is never THROWN! WHY ?
+//			
+//			// Check whether all tasks are finished
+//			if(service.isTerminated())
+//				System.out.print("All tasks finished");
+//			else
+//				System.out.print("There is at least one running task, which has not finished yet for such reason!");//This will be Printed
+//		}
+		awaitTermination(service, 6, TimeUnit.SECONDS);//It might throw a checked InterruptedException
 	}
 
 }
