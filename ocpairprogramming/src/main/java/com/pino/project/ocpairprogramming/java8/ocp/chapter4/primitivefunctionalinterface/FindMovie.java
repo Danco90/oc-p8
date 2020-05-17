@@ -5,12 +5,15 @@ import java.util.List;
 import java.util.function.Function;
 
 class FindMovie{
-	private Function<String> printer; //(*) doesn't compile
+//	private Function<String> printer; //(*) doesn't compile
+	private Function<String,String> printer;
 	protected FindMovie(){
-		printer = s -> {System.out.println(s); return s;} //(**) doesn't compile
+//		printer = s -> {System.out.println(s); return s;} //(**) doesn't compile for the missing ';'
+		printer = s -> {System.out.println(s); return s;};
 	}
 	void printMovies(List<String> movies){
-		movies.forEach(printer); //(***) doesn't compile
+//		movies.forEach(printer); //(***) doesn't compile since it requires a Consumer
+		movies.forEach(System.out::println);
 	}
 	public static void main(String[]args){
 		List<String> movies = new ArrayList<>();

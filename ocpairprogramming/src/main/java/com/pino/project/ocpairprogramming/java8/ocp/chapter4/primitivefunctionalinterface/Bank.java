@@ -5,7 +5,8 @@ import java.util.function.DoubleToIntFunction;
 class Bank{
 	private int savingsInCents;
 	private static class ConvertToCents{
-		static DoubleToIntFunction f = p -> p*100; //doesn't compile
+//		static DoubleToIntFunction f = p -> p*100; //doesn't compile
+		static DoubleToIntFunction f = p -> (int)p*100;
 	}
 	public static void main(String ... currency){
 		Bank creditUnion = new Bank();
