@@ -1,4 +1,4 @@
-package primitiveStream;
+package com.pino.project.ocpairprogramming.java8.ocp.chapter4.primitiveStream;
 
 import java.util.DoubleSummaryStatistics;
 import java.util.stream.DoubleStream;
@@ -46,21 +46,21 @@ public class IntLongDoubleStream {
 		DoubleSummaryStatistics doubleSummary;
 		
 		LongStream streamLong = LongStream.of(9);
-		streamLong.mapToInt(p ->p).forEach(System.out::print);
+//		streamLong.mapToInt(p ->p).forEach(System.out::print); //DOES NOT COMPILE
 		streamLong.mapToDouble(p->p).forEach(System.out::println);
 		
 		DoubleStream streamDouble = DoubleStream.of(9.0);
 		//streamDouble.mapToInt(p->p).forEach(System.out::println);
-		streamDouble.mapToLong(p->p).forEach(System.out::println);
+//		streamDouble.mapToLong(p->p).forEach(System.out::println);//DOES NOT COMPILE
 		
 		IntStream streamInt = IntStream.of(9);
 		streamInt.map(p->p).forEach(System.out::println);
 		
 		long longValue = 9L;
-		int intValue = longValue; //NO
+//		int intValue = longValue; //NO //DOES NOT COMPILE
 		double doubleValue = 9.0;
 		doubleValue = longValue;
-		longValue = doubleValue; //NO
+//		longValue = doubleValue; //NO //DOES NOT COMPILE
 		
 	}
 }
