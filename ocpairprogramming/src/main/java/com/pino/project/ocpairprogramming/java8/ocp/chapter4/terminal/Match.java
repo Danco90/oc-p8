@@ -9,12 +9,12 @@ public class Match {
 	public static void main(String[] args) {
 		System.out.println("ITERATE MATCH 1:");
 		Predicate<? super Integer> predicate2 = s-> s >3;
-		Stream<Integer> stream3 = Stream.iterate(1, (s)->s++); 
-		stream3.forEach(System.out::println); //ddd dddddd
-		//boolean b23 = stream3.anyMatch(predicate2); //true
-		//boolean b23 = stream3.allMatch(predicate2); //false
-		//boolean b23 = stream3.noneMatch(predicate2); //false
-		//System.out.println(b23);
+//		Stream<Integer> stream3 = Stream.iterate(1, (s)->/*++s*/s++); //.iterate() does not work properly with post increment. it hangs because the predicate condition is never met
+//		stream3.forEach(System.out::println); //ddd dddddd
+//		boolean b23 = stream3.anyMatch(predicate2); //true
+//		boolean b23 = stream3.allMatch(predicate2); //false
+//		boolean b23 = stream3.noneMatch(predicate2); //false
+//		System.out.println(b23);
 		
 		/*
 	     * first param stopOnPredicateMatches
@@ -33,15 +33,24 @@ public class Match {
 		//boolean b23e = stream3e.noneMatch(predicate2e); //infinite &
 		System.out.println(b23e);
 		
+		System.out.println("ITERATE MATCH 2b:");
+		Predicate<? super String> predicate2b = s-> !s.isEmpty();
+		Stream<String> stream3b = Stream.iterate("ddd", (s)->s+s); 
+		//stream3b.forEach(System.out::println); //ddd dddddd ....
+//		boolean b3b = stream3b.anyMatch(predicate2b); //true 
+//		boolean b3b = stream3b.allMatch(predicate2b); //infinite - OutOfMemoryError
+		boolean b3b = stream3b.noneMatch(predicate2b); //false 
+		System.out.println(b3b);
+		
 		
 		System.out.println("ITERATE MATCH 3:");
 		// No Infinite Stream. if you use generate is an infinite stream
 		Predicate<? super String> predicateI = s -> s.startsWith("g"); 
 		Stream<String> streamI = Stream.iterate("", (s)->"growl! "); 
-		//streamI.forEach(System.out::println); // "<empty>" growl! ....
-		boolean bI = streamI.anyMatch(predicateI); //true
-		//boolean bI = streamI.allMatch(predicateI);  //false
-		//boolean bI = streamI.noneMatch(predicateI);  //false
+//		streamI/*.limit(2)*/.forEach(System.out::println); // "<empty>" growl! ....
+//		boolean bI = streamI.anyMatch(predicateI); //true
+//		boolean bI = streamI.allMatch(predicateI);  //false
+		boolean bI = streamI.noneMatch(predicateI);  //false because it founds out NONE(true, false); at the second element
 	    System.out.println(bI);
 	    
 	  
@@ -49,10 +58,10 @@ public class Match {
 		Predicate<? super String> predicate4e = s-> s.isEmpty();
 		Stream<String> stream4e = Stream.iterate("", (s)->s+s);
 		//stream4e.forEach(System.out::println); // "<empty>"  "<empty>" 
-		//boolean b24e = stream4e.anyMatch(predicate4e); //true  ||
-		//boolean b24e = stream4e.allMatch(predicate4e); //infinite &&
-		//boolean b24e = stream4e.noneMatch(predicate4e); //infinite &
-		//System.out.println(b24e);
+//		boolean b24e = stream4e.anyMatch(predicate4e); //true  ||
+//		boolean b24e = stream4e.allMatch(predicate4e); //infinite && - OutOfMemoryError
+		boolean b24e = stream4e.noneMatch(predicate4e); //false
+		System.out.println(b24e);
 		
 		
 		System.out.println("GENERATE MATCH 1:");
@@ -71,32 +80,32 @@ public class Match {
 		 */
 		System.out.println("GENERATE MATCH 2:");
 		Stream<String> s= Stream.generate(()->"meow").limit(2);
-		s.forEach(System.out::println); //meow meow
-		//boolean match = s.anyMatch(String::isEmpty); //run infinitely. The stream aren't know that a match won't shop up later.
-		//boolean match = s.anyMatch(String::length); //DOESN'T COMPILE type is String
-		//boolean match = s.noneMatch(String::isEmpty); //run infinitely
-		//boolean match = s.allMatch(String::isEmpty); ////false
-		//System.out.println(match);
+//		s.forEach(System.out::println); //meow meow
+//		boolean match = s.anyMatch(String::isEmpty); //FALSE
+//		boolean match = s.anyMatch(String::length); //DOESN'T COMPILE type is String
+//		boolean match = s.noneMatch(String::isEmpty); //TRUE
+		boolean match = s.allMatch(String::isEmpty); ////FALSE
+		System.out.println(match);
 		
 		
 		//Infinite Stream
 		System.out.println("GENERATE MATCH 3:");
 		Predicate<? super String> predicate3 = s2-> s2.length() >3;
 		Stream<String> stream44 = Stream.generate(()->"ddd").limit(2);
-		stream44.forEach(System.out::println); //ddd ddd
-		//boolean b5 = stream44.anyMatch(predicate3); //infinite (true)
-		//boolean b5 = stream44.allMatch(predicate3); //false
-		//boolean b5 = stream44.noneMatch(predicate3); //infinite 
-		//System.out.println(b5);
+//		stream44.forEach(System.out::println); //ddd ddd
+//		boolean b5 = stream44.anyMatch(predicate3); //false
+//		boolean b5 = stream44.allMatch(predicate3); //false
+		boolean b5 = stream44.noneMatch(predicate3); //true 
+		System.out.println(b5);
 		
 		System.out.println("GENERATE MATCH 4:");
 		Predicate<? super String> predicate4 = s2-> s2.length() >3;
 		Stream<String> stream444 = Stream.generate(()->"dddd").limit(2);
-		stream444.forEach(System.out::println); //dddd dddd
-		//boolean b34 = stream444.anyMatch(predicate4); //true
-		//boolean b34 = stream444.allMatch(predicate4); //infinite
-		//boolean b34 = stream444.noneMatch(predicate4); //false
-		//System.out.println(b34);
+//		stream444.forEach(System.out::println); //dddd dddd
+//		boolean b34 = stream444.anyMatch(predicate4); //true
+//		boolean b34 = stream444.allMatch(predicate4); //true
+		boolean b34 = stream444.noneMatch(predicate4); //false
+		System.out.println(b34);
 		
 		List<String> list = Arrays.asList("monkey","0","chimp");
 		Predicate<String> pred = x-> Character.isLetter(x.charAt(0));

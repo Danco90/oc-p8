@@ -9,7 +9,24 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-public class WaitingForAllTasksToFinish {
+/**
+ * Topic  : Waiting for the termination of some tasks with shutdownNow()
+ * Details: ExecutorService will not be automatically destroyed when there is not task to process. It will stay alive and wait for new tasks to do.
+ * 			Therefore, the ExecutorService interface provides 3 methods for controlling the termination of tasks submitted to executor: 
+ * 			- void shutdown() initiates an orderly shutdown in which previously submitted tasks are executed, but no new tasks 
+ * 			             will be accepted. This method does not wait for previously submitted tasks (but not started executing) to complete execution.
+ * 			
+ * 			- List<Runnable> shutdownNow(); attempts to stop all actively executing tasks, halts(blocks) the processing of waiting tasks, 
+ * 			  and returns a list of the tasks that were awaiting execution.This method does not wait for actively executing tasks to terminate 
+ * 			  and tries to stop them forcefully. There are no guarantees beyond best-effort attempts to stop processing actively executing tasks. 
+ * 			  This implementation cancels tasks via Thread.interrupt(), so any task that fails to respond to interrupts may never terminate.
+ * 			
+ * 			- awaitTermination(long timeout, TimeUnit unit) blocks until all tasks have completed execution after a shutdown request, 
+ * 			  or the timeout occurs, or the current thread is interrupted, whichever happens first.
+ * @author matteodaniele
+ *
+ */
+public class WaitingForAllTasksToFinishWithShutdownNow extends BaseShuttingDownUsecase{
 
 	public static void main(String[] args) throws InterruptedException {
 		ExecutorService service = null;
@@ -25,7 +42,7 @@ public class WaitingForAllTasksToFinish {
 			} catch (ExecutionException e1) { e1.printStackTrace();}
 			
 			//3- submit callable task
-			Future<?> genResult = service.submit(() -> "Executing and returning: Callable-task-1");//Submits and attemps to exec a Runnable task in the future and returns a Future representing the task
+			Future<?> genResult = service.submit(() -> "Executing and returning: Callable-task-1");//Submits and attempts to exec a Runnable task in the future and returns a Future representing the task
 			try { System.out.println("Runnable-task-3 result is : " + (String) genResult.get()/*.toString()*/);
 			} catch (ExecutionException e) { e.printStackTrace(); }
 			
@@ -35,7 +52,7 @@ public class WaitingForAllTasksToFinish {
         		tasksList.add(() -> "Exec & retur : Callable-task-3" );
         		tasksList.add(() -> "Exec & retur : Callable-task-4" );
 			List<Future<String>> genResultList = service.invokeAll(tasksList);
-			genResultList.forEach((Future<String> s) -> {//Consumer<>
+			genResultList.forEach((Future<String> s) -> {//Consumer<T>
 				try { System.out.println(s.get());//get() throws ExecutionException
 				} catch (InterruptedException | ExecutionException e) {
 					e.printStackTrace();
@@ -50,22 +67,13 @@ public class WaitingForAllTasksToFinish {
 					System.out.println(genResult2);
 			} catch (ExecutionException e1) { e1.printStackTrace();
 			}
-			
-			
+			//6- invoke a Runnable task
+			service.execute(() ->  { try{Thread.sleep(5000);}catch(InterruptedException e) {}});
 			
 		} finally {
-			if(service != null) service.shutdown();//it might fail the shutdown
+			shutdownNow(service);
 		}
-//		if(service != null) {//if it's still up and running
-//			service.awaitTermination(1, TimeUnit.MINUTES);//If failed, it might throw an InterruptedException
-//			
-//			// Check whether all tasks are finished
-//			
-//			if(service.isTerminated())
-//				System.out.print("All tasks finished");
-//			else
-//				System.out.print("There is at least one running task, which has not finished yet for such reason!");
-//		}
+		checkExecutorStatus(service);
 	}
 
 }

@@ -15,7 +15,7 @@ public class CheckResultsOfSumbittedTasks {
 		try {
 			service = Executors.newSingleThreadExecutor();
 			Future<?> result = service.submit(() -> {
-			for(int i=0; i<500; i++) CheckResultsOfSumbittedTasks.counter++;
+				for(int i=0; i<500; i++) CheckResultsOfSumbittedTasks.counter++;
 			});
 			result.get(10, TimeUnit.SECONDS);
 			System.out.println("Reached!");
