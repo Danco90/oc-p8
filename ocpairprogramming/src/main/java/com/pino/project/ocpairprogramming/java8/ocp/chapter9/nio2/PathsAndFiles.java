@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -68,6 +69,7 @@ public class PathsAndFiles {
 		URI uri4 = path4.toUri();
 		
 		//Accessing the underlying Object
+		//FileSystem getDefault()
 		Path p1 = FileSystems.getDefault().getPath("pandas/cuddly.png");
 		Path p2 = FileSystems.getDefault().getPath("c:", "zooinfo", "November");// c:/zooinfo/November
 		Path p3 = FileSystems.getDefault().getPath("/home/zoodirector");
@@ -117,9 +119,34 @@ public class PathsAndFiles {
 		//CASE Relative Instance of the path Object : it will not traverse
 		// outside the working directory to the file system root.
 		printPathInformation(Paths.get("armadillo/shells.txt"));
-		
 		printPathInformation(Paths.get("zoo/armadillo/shells.txt"));
 		
+		//Checking Path Type with isAbsolute() and toAbsolutePath()
+		Path pth1 = Paths.get("C:\\birds\\egret.txt");//On Windows it is Absolute. Whereas, On mac is relative 
+		System.out.println("Path1 is Absolute? "+pth1.isAbsolute());//therefore, it prints false on Mac
+		System.out.println("Absolute Path1 :"+pth1.toAbsolutePath());// concatenates "/Users/matteodaniele/git/oc-pee/ocpairprogramming"
+																				// + "/" + "C:\\birds\\egret.txt"
+		Path pth2 = Paths.get("birds/condor.txt");//It is Relative both on Windows and on Mac
+		System.out.println("Path2 is Absolute? "+pth2.isAbsolute());//false
+		System.out.println("Absolute Path1 :"+pth2.toAbsolutePath());///Users/matteodaniele/git/oc-pee/ocpairprogramming/birds/condor.txt
+		
+		Path pth3 = Paths.get("/birds/condor.txt");//It is Relative on Windows and Absolute on Mac (because of the root '/')
+		System.out.println("Path2 is Absolute? "+pth3.isAbsolute());//true
+		System.out.println("Absolute Path1 :"+pth3.toAbsolutePath());// /birds/condor.txt
+		
+		System.out.println(Paths.get("/stripes/zebra.exe").isAbsolute());//true on Mac, false on Windows
+		System.out.println(Paths.get("c:/goats/Food.java").isAbsolute());//false on Mac, tfalse on windows (because of c:// instead of c:\\)
+		
+		//Creating a New Path with subpath(int,int) : returns a relative subpath of the Path object, excluding the root '/'
+		//Unless getName(int), subpath(int start, int end) can include multiple path components. And end is always excluded from the interval
+		Path pat = Paths.get("/mammal/carnivore/raccoon.image");//Absolute on Mac. 
+		System.out.println("Path is: "+pat);
+		System.out.println("Subpath from 0 to 3 is: "+pat.subpath(0,3));// [0,1,2[3 (*) mammal/carnivore/raccoon.image
+		System.out.println("Subpath from 1 to 3 is: "+pat.subpath(1,3));// [1,2[3 carnivore/raccoon.image
+		System.out.println("Subpath from 1 to 2 is: "+pat.subpath(1,2));// [1[2 carnivore
+		//(*) : 0-indexed element is the one right after the root '/'. And the maximum index that can be used is the length
+//		System.out.println("Subpath from 0 to 4 is: "+path.subpath(0,4)); // THROWS IllegalArgumentEXCEPTION AT RUNTIME since end is greater than Max index
+//		System.out.println("Subpath from 1 to 1 is: "+path.subpath(1,1)); // THROWS EXCEPTION AT RUNTIME since start must not be equal to end
 		
 	}
 	
