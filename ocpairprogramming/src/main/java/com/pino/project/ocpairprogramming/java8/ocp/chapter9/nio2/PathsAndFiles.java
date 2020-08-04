@@ -1,12 +1,13 @@
 package com.pino.project.ocpairprogramming.java8.ocp.chapter9.nio2;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -21,7 +22,7 @@ import java.nio.file.Paths;
  */
 public class PathsAndFiles {
 
-	public static void main(String[] args) throws URISyntaxException, MalformedURLException {
+	public static void main(String[] args) throws URISyntaxException, IOException {
 		
 //		construct a Path using the Paths class
 		
@@ -147,6 +148,83 @@ public class PathsAndFiles {
 		//(*) : 0-indexed element is the one right after the root '/'. And the maximum index that can be used is the length
 //		System.out.println("Subpath from 0 to 4 is: "+path.subpath(0,4)); // THROWS IllegalArgumentEXCEPTION AT RUNTIME since end is greater than Max index
 //		System.out.println("Subpath from 1 to 1 is: "+path.subpath(1,1)); // THROWS EXCEPTION AT RUNTIME since start must not be equal to end
+		
+		//Using Path Symbols
+		Path pthh = Paths.get("/how/poor/you/are.image");//Absolute on Mac. 
+		System.out.println("Initial Path is: "+pthh);
+		Path pthh1 = Paths.get("/how/poor/you/../we/are.image");// .. references /poor as the parent of /you/are.image
+		System.out.println("New Path is: "+pthh1);
+		Path pthh2 = Paths.get("/how/poor/you/../../rich/we/are.image");// .. references /how as the parent of /poor/you/are.image
+		System.out.println("New Path is: "+pthh2);
+		
+		
+		//Deriving a Path with relativize(). It construct the relative path from on path to another.
+		//CASE relativePathA .relativize( relativePathB)
+		Path ptRelA = Paths.get("fish.txt");
+		Path ptRelB = Paths.get("birds.txt");
+		System.out.println(ptRelA.relativize(ptRelB));
+		System.out.println(ptRelB.relativize(ptRelA));
+		
+		//CASE absolPathA .relativize( absolPathB)
+		//Example B1
+		Path absolPathA = Paths.get("E:\\habitat");
+		Path absolPathB = Paths.get("E:\\sanctuary\\raven");
+		System.out.println(absolPathA.relativize(absolPathB));// ../E:\sanctuary\raven
+		System.out.println(absolPathB.relativize(absolPathA));// ../E:\habitat
+		
+		//Example B2
+		absolPathA = Paths.get("/habitat");
+		absolPathB = Paths.get("/sanctuary/raven");
+		System.out.println(absolPathA.relativize(absolPathB));// ../E:\sanctuary\raven
+		System.out.println(absolPathB.relativize(absolPathA));// ../E:\habitat
+		
+		//Checking for File Existence with Path toRealPath(Path) throws IOexception. 
+		//A- Similarly to toAbsolutePath() method it can convert a Relative path to an absolute one, 
+		//B- unlike toAbsolutePath, it also verifies that the file referenced by the path actually exists. If not, it throws an exception.
+		//C- it is also the only Path method to support the NOFOLLOW_LINKS option.
+		//D- as additional steps, it also remove redundant path elements. It, basically, calls normalize() on the resulting absolute path.
+		//E- it's used also to gain access to the current working directory
+		
+		System.out.println();
+		//Example of symbolic link from /zebra/food.source -> /horse/food.txt and 
+		//current working directory = /horse/schedule
+		try {
+			//Absolute
+			System.out.println(Paths.get("/zebra/food.source").toRealPath());//It would print* /horse/food.txt because of the symb.link. 
+			//relative
+			System.out.println(Paths.get(".././food.txt").toRealPath());//It would print* /horse/food.txt since it goes one level up schedule and one level down horse
+			//In this case both Absolute and relative resolve to the same ABSOLUTE file /horse/food.txt, as the symb.link points to a real file.
+		
+		//(*) NB IT ACTUALLY DOES NOT PRINT ANYTHING as there is not path with symb link in the current directory
+		} catch (IOException e) {
+		// Handle file I/O exception...
+		}
+		
+		//E - Gaining access to the current work dir
+		try {
+			System.out.println(Paths.get(".").toRealPath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		//Interacting with Files
+		//static boolean  exists(Path) , prevent what comes next from throwing exception if file does not exist
+		System.out.println(Files.exists(Paths.get("/ostrich/feathers.png")));//check if the file exists
+		System.out.println(Files.exists(Paths.get("/ostrich")));//check if the directory exists
+		
+		/*Testing Uniqueness with isSameFile(Path, Path)
+		 * It determines  
+		 * - whether two Paths relate to the same file within the fs by calling equal().
+		 *    If not, then it locates each file in the fs and check if they are the same, throwing a checked IOException if either file does not exist.
+		 *    isSameFile() DOES NOT compare the contents of the files. Two files are not equal if they have the SAME CONTENT BUT are in DIFFERENT LOCATIONS!
+		 * 
+		 * - if two Paths refere to the same directory within the fs;
+		 * - It also follows symbolic links;
+		 */
+		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/cobra1"), Paths.get("symlinks/path/to/snake")));
+		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/user/tree/../monkey"), Paths.get("symlinks/path/to/user/monkey")));
+		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/leaves/./giraffe.exe"),Paths.get("symlinks/path/to/leaves/giraffe.exe")));
+		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/flamingo/tail.data"),Paths.get("symlinks/path/to/cardinal/tail.data")));
 		
 	}
 	
