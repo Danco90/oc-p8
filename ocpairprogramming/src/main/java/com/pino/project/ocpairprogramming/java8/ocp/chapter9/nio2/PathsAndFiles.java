@@ -1,5 +1,7 @@
 package com.pino.project.ocpairprogramming.java8.ocp.chapter9.nio2;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,12 +11,13 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.CopyOption;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 
 /**
  * Absolute vs. Relative Is File System Dependent
@@ -334,6 +337,7 @@ public class PathsAndFiles {
 		 *  will throw an NIO.2 DirectoryNotEmptyException .
 		 */
 //		try {
+//		   Files.deleteIfExists(Paths.get("in/zoo-new"));
 //		   Files.move(Paths.get("in/zoo"), Paths.get("in/zoo-new"));//rename zoo in zoo-new, since in the same directory
 //		   Files.move(Paths.get("in/user/addresses.txt"), Paths.get("in/zoo-new/addresses.txt"));//*
 //		} catch (IOException e) {
@@ -343,7 +347,95 @@ public class PathsAndFiles {
 		
 		/*
 		 * Removing a File with delete() and deleteIfExists()
+		 * 
+		 * The Files.delete(Path) deletes a file or empty directory within the file system.
+		 * 	-It throws the checked IOException under a variety of circumstances,
+		 * 	 such as if the the path represents a non-empty directory, the operation will throw the DirectoryNotEmptyException
+		 * 	-If the target of the path is a symlink, then ONLY the symlink will be deleted and NOT the target
+		 * 
+		 * The boolean deleteIfExists(Path) is identical to the previous method, except that 
+		 * It WON'T throw an exception if the file or dir does not exist, but instead it will return false.
+		 * It will still throw an exception if the file or dir DOES exist but FAILS, such as not empty dir
 		 */
+		
+		 try {
+			 Files.createDirectory(Paths.get("in/vulture"));
+			 Files.createFile(Paths.get("in/vulture/feathers.txt"));
+			 Files.delete(Paths.get("in/vulture/feathers.txt"));
+			 Files.delete(Paths.get("in/vulture"));
+			 Files.deleteIfExists(Paths.get("/pigeon"));
+		 } catch (IOException e) {
+			// Handle file I/O exception...
+			 System.out.println("Caught IOException : "+e);
+		 }
+		 
+		 /*
+		  * Reading and Writing File Data with newBufferedReader() and newBufferedWriter()
+		  * 
+		  * 1) newBufferedReader(Path,Charset) reads the file specified by the Path location using a java.io.BufferedReader object. 
+		  *  It also requires a Charset for the character encoding to use to read the file
+		  *  NOTE: characters can be encoded in bytes in a variety of ways. Charset.defaultCharset() can be used to get the default Charset for the JVM
+		  * 
+		  * 2) newBufferedWriter(Path,Charset) writes to a file specified at the Path location using a java.io.BufferedWriter object. 
+		  *  It also takes a Charset for the character encoding to use to read the file
+		  *  
+		  *  NOTE: Both of these methods use buffered streams rather than low-level file streams.
+		  *        Buffered stream are much more performant, so much so that ("tanto (è vero) che") the NIO.2 API includes methods that
+		  *        specifically return these stream classes.
+		  * */
+		 Path pthr = Paths.get("animals/gopher.txt");
+		 try (BufferedReader br = Files.newBufferedReader(pthr, Charset.forName("US-ASCII"))) {
+			// Read from the stream
+			 String currentLine = null;
+			 while((currentLine = br.readLine()) != null)
+				 System.out.println(currentLine);
+		 } catch (IOException e) {
+			 System.out.println("Caught IOException : "+e);
+		 }
+		 
+		 //BufferedWriter newBufferedWriter(Path path, Charset cs, OpenOption... options), which also supports taking additional enum
+		 //values in an optional vararg, such as appending to an existing file instead of overwriting it,
+		 Files.deleteIfExists(Paths.get("animals/gorilla.txt"));
+		 Path pthw = Paths.get("animals/gorilla.txt");
+		 try (BufferedWriter bw = Files.newBufferedWriter(pthw, Charset.forName("UTF-16"))) {
+			 char[] cbuf = new char[] {'1','a','?','b'};
+			 bw.write(cbuf);
+			 bw.write("\n");
+			 bw.write(1);
+			 bw.write("\n");
+			 bw.write("a string");
+			 bw.write("\n");
+			 bw.write(cbuf, 1, 2);
+			 bw.write("\n");
+			 bw.write("supercalifragilispichespiralidoso", 9, 7);
+			 
+		 } catch (IOException e) {
+			 System.out.println("Caught IOException : "+e);
+		 }
+		 
+		 /* READING APPROACH 2 : 
+		  * Reading Files with readAllLines()
+		  * 
+		  * Files.readAllLines() method reads all of the lines of a text file and returns the results as an ordered List of String values.
+		  * It throws a IOException if the file cannot be read.
+		  * NOTE: Be aware that the entire file is read when readAllLines() is called, with the resulting
+		  *       String array storing all of the contents of the file in memory at once.
+		  *       Therefore, if the file is significantly large, you may encounter an OutOfMemoryError 
+		  *       trying to load all of it into memory.
+		  */
+		 Path ptth = Paths.get("fish/sharks.log");
+		 try {
+			 final List<String> lines = Files.readAllLines(ptth);
+			 for(String line: lines) 
+				 System.out.println(line);
+				 
+		 } catch (IOException e) {
+			 System.out.println("Caught IOException : "+e);
+		 }
+		 
+		 /*
+		  * READING APPROACH 3 : new streambased NIO.2 method that is far more performant on large files.
+		  */
 		
 	}
 	
