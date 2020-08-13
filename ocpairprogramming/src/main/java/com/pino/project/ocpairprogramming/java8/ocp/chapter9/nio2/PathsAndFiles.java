@@ -1,15 +1,20 @@
 package com.pino.project.ocpairprogramming.java8.ocp.chapter9.nio2;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.CopyOption;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Absolute vs. Relative Is File System Dependent
@@ -225,6 +230,120 @@ public class PathsAndFiles {
 		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/user/tree/../monkey"), Paths.get("symlinks/path/to/user/monkey")));
 		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/leaves/./giraffe.exe"),Paths.get("symlinks/path/to/leaves/giraffe.exe")));
 		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/flamingo/tail.data"),Paths.get("symlinks/path/to/cardinal/tail.data")));
+		
+		/*
+		 * Making Directories 
+		 * |java.io API             |  NIO.2 API
+		 * +------------------------+-----------------
+		 * |mkdir()  on a File      |Files.createDirectory() 
+		 * |mkdirs() on a File      |Files.createDirectories()
+		 * */
+		//Path createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException, where attrs is optional
+		// -It works only with existing parent directories (if specified in the path) 
+		// -It throws a checked IOException if the dir cannot be created or already exists.
+		//  If the parent directories not exist, throws NoSuchFileException.
+		//  If the directory exists, throws FileAlreadyExistsException.
+		//  If IO errors, throws IOException.
+//		try 
+//		{ 
+//		  Files.createDirectory(Paths.get("bison/field"));//it throws exception, since bison does not exist
+//		  Files.createDirectories(Paths.get("bison/field/pasture/green"));//and so does it		  
+//		} catch (IOException e) {
+//		// Handle file I/O exception...
+//			System.out.println("Caught IOException :" + e);
+//		}
+		
+		try 
+		{   
+//		    Files.createDirectory(Paths.get("bison") );//But this does work*. 
+//			Files.createDirectory(Paths.get("bison/field"));//and so does* this
+			Files.createDirectories(Paths.get("bison/field/pasture/green"));//and obviously this one works* as well
+			//(*) or throws exception if already existing
+		} catch (IOException e) {
+			// Handle file I/O exception...
+				System.out.println("Caught IOException :" + e);
+	    }
+		System.out.println();
+		/* Duplicating File Contents with copy()
+		 * 
+		 * Overloaded method 1 - Files.copy(Path source,Path dest), which throws the checked
+		 * IOException, such as when the file or directory does not exist or cannot be read.
+		 * 
+		 * NB: Dir copies are shallow rather than deep, as that files and subdirs within the dir are not copied
+		 * */
+//		try {
+//		  Files.copy(Paths.get("panda"), Paths.get("panda-save"));//if not created throws checked NoSuchFileException
+//		  Files.copy(Paths.get("panda/bamboo.txt"),
+//				  Paths.get("panda-save/bamboo.txt"));
+//		} catch (IOException e) {
+//			// Handle file I/O exception...
+//			System.out.println("Caught IOException :" + e);
+//		}
+//		System.out.println();
+		
+		try {
+//			  Files.createDirectory(Paths.get("panda"));
+//			  Files.createFile(Paths.get("panda/bamboo.txt"));
+//			  Files.createDirectory(Paths.get("panda-save"));
+//			  Files.copy(Paths.get("panda"), Paths.get("panda-save"), StandardCopyOption.REPLACE_EXISTING);//"2nd time it Throws DirectoryNotEmptyException
+			  Files.copy(Paths.get("panda/bamboo.txt"),
+					  Paths.get("panda-save/bamboo.txt"), StandardCopyOption.REPLACE_EXISTING );
+		} catch (IOException e) {
+			// Handle file I/O exception...
+			System.out.println("Caught IOException :" + e);
+		}
+		System.out.println();
+		
+		/*
+		 * Copying Files with java.io and NIO.2
+		 * 
+		 * NIO.2 Files API contains two overloaded copy() methods for copying files using java.io.streams
+		 * 1rs Path copy(java.io.InputStream source, Path target, CopyOption... options) . It reads the contents from the stream and writes the output to a file represented by a Path object
+		 * 2nd Path copy(Path source, java.io.OutputStream target) . It reads the contents of the file and writes the output to the stream. It does not support optional vararg values,
+		 *                                                          Since the data is being written to a stream that MAY NOT represent a file system resource.
+		 */
+		try (InputStream is = new FileInputStream("in/source-data.txt");
+				OutputStream out = new FileOutputStream("out/output-data.txt")) {
+			//Copy stream* data to a file
+//			Files.copy(is, Paths.get("out/mammals/wolf.txt"));//If already existing, it throws java.nio.file.FileAlreadyExistsException
+			Files.copy(is, Paths.get("out/mammals/wolf.txt"), StandardCopyOption.REPLACE_EXISTING);
+			
+			//Copy file data to stream*
+			Files.copy(Paths.get("in/fish/clown.xsl"), out);
+		} catch (IOException e) {
+			System.out.println("Caught IOException : "+e);
+		}
+		//*In this example, the InputStream and OutputStream parameters could refer to any valid
+		//stream, including website connections, in-memory stream resources, and so forth.
+		
+		/*
+		 * Changing a File Location with move()
+		 * 
+		 * The Files.move(Path,Path, CopyOption) method moves or renames a file or directory within the file system.
+		 * - It throws the checked IOException in the event that the file or dir could not be found or moved.
+		 * By default, the move() method will 
+		 * 	follow links, 
+		 * 	throw an exception if the file already exists, 
+		 *  and not perform an atomic move.
+		 *  NOTE1: If the fs does not support atomic moves (when ATOMIC_MOVE specified), an 
+		 *  AtomicMoveNotSupportedException will be thrown
+		 *  
+		 *  NOTE2:The Files.move() method can be applied to non-empty directories only if
+		 *  they are on the same underlying drive. While moving an empty directory
+		 *  across a drive is supported, moving a non-empty directory across a drive
+		 *  will throw an NIO.2 DirectoryNotEmptyException .
+		 */
+//		try {
+//		   Files.move(Paths.get("in/zoo"), Paths.get("in/zoo-new"));//rename zoo in zoo-new, since in the same directory
+//		   Files.move(Paths.get("in/user/addresses.txt"), Paths.get("in/zoo-new/addresses.txt"));//*
+//		} catch (IOException e) {
+//			System.out.println("Caught IOException : "+e);
+//		}
+		//NB* : Unlike mentioned in the OCP book, it does not rename address.txt in address2.txt
+		
+		/*
+		 * Removing a File with delete() and deleteIfExists()
+		 */
 		
 	}
 	
