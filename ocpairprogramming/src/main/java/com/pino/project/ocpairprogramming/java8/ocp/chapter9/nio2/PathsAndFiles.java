@@ -436,6 +436,46 @@ public class PathsAndFiles {
 		 /*
 		  * READING APPROACH 3 : new streambased NIO.2 method that is far more performant on large files.
 		  */
+		 
+		 System.out.println("9.3.4. Understanding File Attributes");
+		 /*
+		  * 9.3.4. Understanding File Attributes
+		  * 
+		  * Reading Common Attributes with isDirectory(), isRegularFile(), and isSymbolicLink() of the the class Files
+		  * NOTE: They both DO NOT THROW AN EXCEPTION if the path does not exist
+		  * 
+		  * boolean isRegular(Path p) returns true if the target is regular file, even for a symlink as long as the link resolves a regular file
+		  * regular file : one that contains content
+		  */
+		 Path pp1 = Paths.get("canine/coyote/fur.jpg");//*
+		 Path pp2 = Paths.get("canine/types.txt");
+		 Path pp3 = Paths.get("canine/coyote");
+		 System.out.println("Is '"+pp1 +"' a Directory ? " + Files.isDirectory(pp1));//false since not existing
+		 System.out.println("Is '"+pp2 +"' a Regular ? " + Files.isRegularFile(pp2));
+		 System.out.println("Is '"+pp3 +"' a SymbolicLink ? " + Files.isSymbolicLink(pp3));
+		 
+		 //*NB: directories can have extensions in many file systems, so it
+		 //is possible for fur.jpg to be the name of a directory.
+		 System.out.println();
+		 Path pp4 = Paths.get("canine/coyotes");
+		 //Assume that /coyotes is a symlink (previously created)
+		 System.out.print("\n'"+pp3 +"' isDirectory() : " + Files.isDirectory(pp3));
+		 System.out.print(", isRegularFile() : " + Files.isRegularFile(pp3));
+		 System.out.print(", isSymbolicLink() : " + Files.isSymbolicLink(pp3));
+		 System.out.print("\n'"+pp2 +"' isDirectory() : " + Files.isDirectory(pp2));
+		 System.out.print(", isRegularFile() : " + Files.isRegularFile(pp2));
+		 System.out.print(", isSymbolicLink() : " + Files.isSymbolicLink(pp2));
+		 System.out.print("\n'"+pp4 +"' isDirectory() : " + Files.isDirectory(pp4));//**
+		 System.out.print(", isRegularFile() : " + Files.isRegularFile(pp4));//**
+		 System.out.print(", isSymbolicLink() : " + Files.isSymbolicLink(pp4));
+		 
+		 //**NOTE: You see that the value of isDirectory() and isRegular() in Table 9.3 cannot be determined
+		 //on the symbolic link /coyotes without knowledge of what the symbolic link points to.
+		 
+		 /*
+		  * Checking File Visibility with isHidden()
+		  */
+		 
 		
 	}
 	
