@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.util.List;
 
 /**
@@ -471,10 +472,35 @@ public class PathsAndFiles {
 		 
 		 //**NOTE: You see that the value of isDirectory() and isRegular() in Table 9.3 cannot be determined
 		 //on the symbolic link /coyotes without knowledge of what the symbolic link points to.
-		 
+		 System.out.println();
 		 /*
 		  * Checking File Visibility with isHidden()
 		  */
+		 try {
+			 Path hp = Paths.get("in/.walrus.txt");
+//			 final PosixFileAttributes posixAttrs  = Files.readAttributes(hp, PosixFileAttributes.class);
+
+			 boolean isHidden = Files.isHidden(hp);
+//			 System.out.println("\nHidden (Posix)  : " + ((File) posixAttrs).isHidden());
+			  
+			 System.out.println("\n is '"+hp+"' hidden ? " + isHidden);//In order to returns true the file should starts with '.'
+		 } catch (IOException e) {
+			 System.out.println("Caught IOException : "+e);
+		 }
+		 
+		 /*
+		  * Reading File Length with size()
+		  * 
+		  * Files.size(Path) method is used to determine the size of the file in bytes
+		  * 1 char is 1 byte long
+		  */
+		 try {
+//			 Files.createDirectories(Paths.get("zoo/c"));
+//			 Files.createFile(Paths.get("zoo/c/animals.txt"));
+			 System.out.println("The size of 'zoo/c/animals.txt' is "+ Files.size(Paths.get("zoo/c/animals.txt"))+" bites");
+		 } catch (IOException e) {
+		 // Handle file I/O exception...
+		 }
 		 
 		
 	}
