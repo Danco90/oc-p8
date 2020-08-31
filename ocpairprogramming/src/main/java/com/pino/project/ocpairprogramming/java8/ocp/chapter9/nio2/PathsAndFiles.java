@@ -14,6 +14,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -97,11 +98,13 @@ public class PathsAndFiles {
 		/*
 		 * Using Path Objects 
 		 * 
+		 * BASIC info about the path representative
 		 * Viewing the Path with 
-		 * toString(), getNameCount(),and getName()
+		 * toString(), int getNameCount(),and Path getName(int index)
 		 */
 		//Case Absolute path
-		Path pt = Paths.get("/land/hippo/harry.happy");//relative
+		System.out.println("BASIC INFO : Case relative path");
+		Path pt = Paths.get("land/hippo/harry.happy");//relative
 		System.out.println("The Path Name is: "+pt);//automatically invokes the object's toString()
 		for(int i=0; i< pt.getNameCount(); i++)
 			System.out.println(" Element "+i+" is: "+pt.getName(i));//(*)
@@ -109,20 +112,23 @@ public class PathsAndFiles {
 		//(*) getName(int) is zero-indexed, with the file system root excluded from the path
 		
 		//Case Absolute path
+		System.out.println("\nBASIC INFO : Case absolute path");
 		Path pt2 = Paths.get("/land/hippo/harry.happy");//absolute. root element / is not included. So the count is still 3
 		for(int i=0; i< pt2.getNameCount(); i++)
 			System.out.println(" Element "+i+" is: "+pt2.getName(i));
 		
 		//Case only root element /
+		System.out.println("\nBASIC INFO : Case only root element '/'");
 		Path rootpt = Paths.get("/");//absolute path and root element / which is not included. therefore the count is 0
 		for(int i=0; i< rootpt.getNameCount(); i++)
 			System.out.println(" Element "+i+" is: "+rootpt.getName(i));//if the count is 0, no element is printed
 		
 		/*
 		 * Accessing Path Components with 
-		 * getFileName(), getParent(), and getRoot()
+		 * Path getFileName(), Path getParent(), and Path getRoot()
 		 */
 		//CASE Absolute Instance of the path Object 
+		System.out.println("\nCASE Absolute Instance of the path Object ");
 		printPathInformation(Paths.get("/zoo/armadillo/shells.txt"));
 		System.out.println();
 		
@@ -131,17 +137,20 @@ public class PathsAndFiles {
 		printPathInformation(Paths.get("armadillo/shells.txt"));
 		printPathInformation(Paths.get("zoo/armadillo/shells.txt"));
 		
-		//Checking Path Type with isAbsolute() and toAbsolutePath()
+		//Checking Path Type with  
+		//	boolean isAbsolute()  returns true if absolute, false if relative.
+		//	Path toAbsolutePath() converts a rel Path obj to an absolute Path object by joining* it to the current working directory
+		//  *nb: if it is already absolute, then it is directly returned without concatenation
 		Path pth1 = Paths.get("C:\\birds\\egret.txt");//On Windows it is Absolute. Whereas, On mac is relative 
-		System.out.println("Path1 is Absolute? "+pth1.isAbsolute());//therefore, it prints false on Mac
+		System.out.println("\n"+pth1+" is Absolute? "+pth1.isAbsolute());//therefore, it prints false on Mac
 		System.out.println("Absolute Path1 :"+pth1.toAbsolutePath());// concatenates "/Users/matteodaniele/git/oc-pee/ocpairprogramming"
 																				// + "/" + "C:\\birds\\egret.txt"
 		Path pth2 = Paths.get("birds/condor.txt");//It is Relative both on Windows and on Mac
-		System.out.println("Path2 is Absolute? "+pth2.isAbsolute());//false
+		System.out.println("\n"+pth2+"  is Absolute? "+pth2.isAbsolute());//false
 		System.out.println("Absolute Path1 :"+pth2.toAbsolutePath());///Users/matteodaniele/git/oc-pee/ocpairprogramming/birds/condor.txt
 		
 		Path pth3 = Paths.get("/birds/condor.txt");//It is Relative on Windows and Absolute on Mac (because of the root '/')
-		System.out.println("Path2 is Absolute? "+pth3.isAbsolute());//true
+		System.out.println("\n"+pth3+"  is Absolute? "+pth3.isAbsolute());//true
 		System.out.println("Absolute Path1 :"+pth3.toAbsolutePath());// /birds/condor.txt
 		
 		System.out.println(Paths.get("/stripes/zebra.exe").isAbsolute());//true on Mac, false on Windows
@@ -150,7 +159,7 @@ public class PathsAndFiles {
 		//Creating a New Path with subpath(int,int) : returns a relative subpath of the Path object, excluding the root '/'
 		//Unless getName(int), subpath(int start, int end) can include multiple path components. And end is always excluded from the interval
 		Path pat = Paths.get("/mammal/carnivore/raccoon.image");//Absolute on Mac. 
-		System.out.println("Path is: "+pat);
+		System.out.println("\nPath is: "+pat);
 		System.out.println("Subpath from 0 to 3 is: "+pat.subpath(0,3));// [0,1,2[3 (*) mammal/carnivore/raccoon.image
 		System.out.println("Subpath from 1 to 3 is: "+pat.subpath(1,3));// [1,2[3 carnivore/raccoon.image
 		System.out.println("Subpath from 1 to 2 is: "+pat.subpath(1,2));// [1[2 carnivore
@@ -159,6 +168,7 @@ public class PathsAndFiles {
 //		System.out.println("Subpath from 1 to 1 is: "+path.subpath(1,1)); // THROWS EXCEPTION AT RUNTIME since start must not be equal to end
 		
 		//Using Path Symbols
+		System.out.println("\nUsing Path Symbols '.' and  '..'");
 		Path pthh = Paths.get("/how/poor/you/are.image");//Absolute on Mac. 
 		System.out.println("Initial Path is: "+pthh);
 		Path pthh1 = Paths.get("/how/poor/you/../we/are.image");// .. references /poor as the parent of /you/are.image
@@ -167,25 +177,90 @@ public class PathsAndFiles {
 		System.out.println("New Path is: "+pthh2);
 		
 		
-		//Deriving a Path with relativize(). It construct the relative path from on path to another.
+		//Deriving a Path with relativize(). It constructs the relative path from a path to another, as if they were in the same CURRENT DIR
+		////NB: Like normalize(), It does not check that the file actually exists!
 		//CASE relativePathA .relativize( relativePathB)
+		System.out.println("\n CASE relativePathA .relativize( relativePathB)");
 		Path ptRelA = Paths.get("fish.txt");
 		Path ptRelB = Paths.get("birds.txt");
 		System.out.println(ptRelA.relativize(ptRelB));
 		System.out.println(ptRelB.relativize(ptRelA));
 		
-		//CASE absolPathA .relativize( absolPathB)
-		//Example B1
+		//CASE absolPathA .relativize( absolPathB) computes the relative paths from one absolute location to another
+		//      It requires that both paths be either relative or both absolute, and it will throw an IllegalArgumentException if mixed
+		//      In Windows it requires also than both absolute paths, if used, must have the same root dir or drive letter.
+		// NB : Note that the file system is not accessed to perform this comparison and the code will compile since Java is referencing the path elements and not the actual file values.
+		// NB2: it does not clean up path symbols
+		System.out.println("\n absolPathA .relativize( absolPathB)");
+		//Example B1 - WINDOWS
 		Path absolPathA = Paths.get("E:\\habitat");
 		Path absolPathB = Paths.get("E:\\sanctuary\\raven");
 		System.out.println(absolPathA.relativize(absolPathB));// ../E:\sanctuary\raven
 		System.out.println(absolPathB.relativize(absolPathA));// ../E:\habitat
 		
-		//Example B2
+		//Example B2 - MAC
 		absolPathA = Paths.get("/habitat");
 		absolPathB = Paths.get("/sanctuary/raven");
-		System.out.println(absolPathA.relativize(absolPathB));// ../E:\sanctuary\raven
+		System.out.println("\n"+absolPathA.relativize(absolPathB));// ../E:\sanctuary\raven
 		System.out.println(absolPathB.relativize(absolPathA));// ../E:\habitat
+		
+		//Example B3 - Exception thrown in MAC
+		Path path11 = Paths.get("/primate/chimpanzee");
+		Path path22 = Paths.get("bananas.txt");
+		try{
+			System.out.println("\n"+path11.relativize(path22)); // THROWS EXCEPTION AT RUNTIME only in Mac
+		} catch (Exception e) {
+			System.out.println("caught exception "+e);
+		}
+		
+		//Example B3 - Exception thrown in WINDOWS
+		Path path111 = Paths.get("c:\\primate\\chimpanzee");
+		Path path222 = Paths.get("d:\\storage\\bananas.txt");
+		try{
+			System.out.println("\n"+path111.relativize(path222)); // THROWS EXCEPTION AT RUNTIME ONLY in Windows
+		} catch (Exception e) {
+			System.out.println("caught exception "+e);
+		}
+		
+		
+		//Joining Path Objects with resolve() creating a new Path by joining an existing path to the current path.
+		//Basically, the object on which the resolve() method is invoked becomes the basis of the new Path object, with the input argument being
+		//appended onto the Path.
+		// NB: it does not clean up path symbols
+		final Path path1111 = Paths.get("/cats/../panther");
+		final Path path2222 = Paths.get("food");
+		try{
+			System.out.println("\n"+path1111.resolve(path2222)); // /cats/../panther/food
+		} catch (Exception e) {
+			System.out.println("caught exception "+e);
+		}
+		
+		System.out.println("\nCase resolve() between two absolute paths");
+		final Path path1112 = Paths.get("/turkey/food");
+		final Path path1113 = Paths.get("/tiger/cage");
+		try{
+			System.out.println(path1112.resolve(path1113));// /tiger/cage
+			System.out.println(path1113.resolve(path1112));// /turkey/food
+		} catch (Exception e) {
+			System.out.println("caught exception "+e);
+		}
+		
+		//Cleaning up with normalize() : it can eliminate the redundancies in the paths
+		//NB: Like relativize(), It does not check that the file actually exists!
+		System.out.println("\nCleaning up with normalize() ");
+		//CASE FOR WINDOWS sintax
+		Path path1114 = Paths.get("E:\\data");//*
+		Path path1115 = Paths.get("E:\\user\\home");
+		//* in windows the escape char '/' is needed before slash /. But when printed will not be considered
+		Path relativePath = path1114.relativize(path1115);/* ../E:\\user\home on Mac , whereas ..\\user\home on Windows */
+		try{
+			System.out.println(path1114.resolve(relativePath)); //  E:\data/../E: \ user\home on Mac , whereas 'E:\data\..\ user\home' on Windows 
+			System.out.println("normalized Without redundancies : " +path1114.resolve(relativePath).normalize()); // 'E:\ user\home'
+		} catch (Exception e) {
+			System.out.println("caught exception "+e);
+		}
+		
+		//CASE FOR MAC
 		
 		//Checking for File Existence with Path toRealPath(Path) throws IOexception. 
 		//A- Similarly to toAbsolutePath() method it can convert a Relative path to an absolute one, 
@@ -194,22 +269,40 @@ public class PathsAndFiles {
 		//D- as additional steps, it also remove redundant path elements. It, basically, calls normalize() on the resulting absolute path.
 		//E- it's used also to gain access to the current working directory
 		
-		System.out.println();
+		System.out.println("\nPath toRealPath(Path) throws IOexception ");
 		//Example of symbolic link from /zebra/food.source -> /horse/food.txt and 
 		//current working directory = /horse/schedule
 		try {
-			//Absolute
-			System.out.println(Paths.get("/zebra/food.source").toRealPath());//It would print* /horse/food.txt because of the symb.link. 
+			//CASE A of relatives paths, following any symbolik links BY DEFAULT (if not specified the vararg)
+			System.out.println("\n"+Paths.get("zebra/food.source").toRealPath());//It would print* /horse/food.txt because of the symb.link. 
 			//relative
-			System.out.println(Paths.get(".././food.txt").toRealPath());//It would print* /horse/food.txt since it goes one level up schedule and one level down horse
+			System.out.println(Paths.get("horse/schedule/.././food.txt").toRealPath());//It would print* /horse/food.txt since it goes one level up schedule and one level down horse
 			//In this case both Absolute and relative resolve to the same ABSOLUTE file /horse/food.txt, as the symb.link points to a real file.
-		
+			System.out.println(Paths.get("horse/schedule/.././food1.txt").toRealPath());
 		//(*) NB IT ACTUALLY DOES NOT PRINT ANYTHING as there is not path with symb link in the current directory
 		} catch (IOException e) {
+			System.out.println("caught exception "+e);
+		}
+		
+		//C
+		//Example of symbolic link from /zebra/food.source -> /horse/food.txt and 
+		//current working directory = /horse/schedule
+		System.out.println("\n '3. NOFOLLOW_LINKS '");
+		try {
+			
+			//CASE B - same example without following any syslinks, it stops 
+			System.out.println(Paths.get("zebra/food.source")
+					.toRealPath(LinkOption.NOFOLLOW_LINKS));//It would stop and print* zebra/food.source because it does not cross any symb.link. 
+			System.out.println(Paths.get("horse/schedule/.././food.txt").toRealPath(LinkOption.NOFOLLOW_LINKS));//It would print* horse/food.txt since it goes one level up schedule and one level down horse
+			//In this case both Absolute and relative resolve to the same ABSOLUTE file /horse/food.txt, as the symb.link points to a real file.
+		//(*) NB IT MIGHT NOT PRINT ANYTHING if there is not path with symb link in the current directory
+		} catch (IOException e) {
 		// Handle file I/O exception...
+			System.out.println("Caught IOException : "+e);
 		}
 		
 		//E - Gaining access to the current work dir
+		System.out.println("\n E - Gaining access to the current work dir");
 		try {
 			System.out.println(Paths.get(".").toRealPath());
 		} catch (IOException e) {
@@ -506,10 +599,11 @@ public class PathsAndFiles {
 	}
 	
 	public static void printPathInformation(Path path) {
-		System.out.println("Filename is: "+path.getFileName());
-		System.out.println("Root is: "    +path.getRoot());//returns null if the Path object is relative.
+		System.out.println(path);
+		System.out.println("Filename is: "+path.getFileName());//The farther element from the root 
+		System.out.println("Root is: "    +path.getRoot());//returns null if the Path object is relative. Otherwise it returns "/" on Mac
 		Path currentParent = path;
-		while((currentParent = currentParent.getParent()) != null)// returns a Path instance representing the parent path or null if there is no such parent.
+		while((currentParent = currentParent.getParent()) != null)// returns a Path instance representing the closer element (all the path) from the leaf (except the leaf)  or null if there is no such parent.
 			System.out.println(" Current parent is: "+currentParent);
 	}
 
