@@ -18,7 +18,10 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.List;
 
 /**
@@ -33,9 +36,7 @@ import java.util.List;
 public class PathsAndFiles {
 
 	public static void main(String[] args) throws URISyntaxException, IOException {
-		
 //		construct a Path using the Paths class
-		
 		//A - get(String path)
 		//Path reference to a relative file into the current working directory ('/ocpairprogramming')
 		Path path1 = Paths.get("pandas/cuddly.png");
@@ -310,11 +311,12 @@ public class PathsAndFiles {
 		}
 		
 		//Interacting with Files
+		System.out.println("\n** Interacting with Files **\n");
 		//static boolean  exists(Path) , prevent what comes next from throwing exception if file does not exist
 		System.out.println(Files.exists(Paths.get("/ostrich/feathers.png")));//check if the file exists
 		System.out.println(Files.exists(Paths.get("/ostrich")));//check if the directory exists
 		
-		/*Testing Uniqueness with isSameFile(Path, Path)
+		/*Testing Uniqueness with boolean isSameFile(Path, Path) throws IOException
 		 * It determines  
 		 * - whether two Paths relate to the same file within the fs by calling equal().
 		 *    If not, then it locates each file in the fs and check if they are the same, throwing a checked IOException if either file does not exist.
@@ -323,7 +325,7 @@ public class PathsAndFiles {
 		 * - if two Paths refere to the same directory within the fs;
 		 * - It also follows symbolic links;
 		 */
-		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/cobra1"), Paths.get("symlinks/path/to/snake")));
+		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/cobra1"), Paths.get("symlinks/path/to/snake")));//It MUST output true because of the sys link
 		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/user/tree/../monkey"), Paths.get("symlinks/path/to/user/monkey")));
 		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/leaves/./giraffe.exe"),Paths.get("symlinks/path/to/leaves/giraffe.exe")));
 		System.out.println(Files.isSameFile(Paths.get("symlinks/path/to/flamingo/tail.data"),Paths.get("symlinks/path/to/cardinal/tail.data")));
@@ -332,23 +334,30 @@ public class PathsAndFiles {
 		 * Making Directories 
 		 * |java.io API             |  NIO.2 API
 		 * +------------------------+-----------------
-		 * |mkdir()  on a File      |Files.createDirectory() 
-		 * |mkdirs() on a File      |Files.createDirectories()
+		 * |mkdir()  on a File      |static Path createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException 
+		 * |mkdirs() on a File      |static Path createDirectories(Path dir, FileAttribute<?>... attrs) throws IOException
 		 * */
-		//Path createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException, where attrs is optional
-		// -It works only with existing parent directories (if specified in the path) 
-		// -It throws a checked IOException if the dir cannot be created or already exists.
-		//  If the parent directories not exist, throws NoSuchFileException.
-		//  If the directory exists, throws FileAlreadyExistsException.
-		//  If IO errors, throws IOException.
-//		try 
-//		{ 
-//		  Files.createDirectory(Paths.get("bison/field"));//it throws exception, since bison does not exist
-//		  Files.createDirectories(Paths.get("bison/field/pasture/green"));//and so does it		  
-//		} catch (IOException e) {
-//		// Handle file I/O exception...
-//			System.out.println("Caught IOException :" + e);
-//		}
+		//Both methods 
+		// -work only with existing parent directories (if specified in the path) 
+		// -throw a checked IOException if the dir cannot be created or already exists.
+		// -If the directory exists, throws FileAlreadyExistsException.
+		// -If IO errors, throws IOException.
+		// -accept an optional list of FileAttribute<?> values to set on
+		//  the newly created directory or directories.
+		
+		// Only createDirectory() method
+		//  If the parent directory in which the new dir resides does not exist, throws NoSuchFileException.
+	
+		System.out.println("\n** Making Directories with Files.createDirectory() and Files.createDirectories() **\n");
+		try 
+		{ Files.deleteIfExists(Paths.get("bison/field/pasture/green"));
+		  Files.deleteIfExists(Paths.get("bison/field/pasture"));
+		  Files.deleteIfExists(Paths.get("bison/field"));
+		  Files.createDirectory(Paths.get("bison/field"));//it throws exception, since bison does not exist
+		  Files.createDirectories(Paths.get("bison/field/pasture/green"));//and so does it	
+		} catch (IOException e) {
+			System.out.println("Caught IOException :" + e);
+		}
 		
 		try 
 		{   
@@ -360,23 +369,24 @@ public class PathsAndFiles {
 			// Handle file I/O exception...
 				System.out.println("Caught IOException :" + e);
 	    }
-		System.out.println();
+		
+		System.out.println("\n** Duplicating File Contents with copy() **\n");
 		/* Duplicating File Contents with copy()
+		 * 
 		 * 
 		 * Overloaded method 1 - Files.copy(Path source,Path dest), which throws the checked
 		 * IOException, such as when the file or directory does not exist or cannot be read.
 		 * 
 		 * NB: Dir copies are shallow rather than deep, as that files and subdirs within the dir are not copied
 		 * */
-//		try {
-//		  Files.copy(Paths.get("panda"), Paths.get("panda-save"));//if not created throws checked NoSuchFileException
-//		  Files.copy(Paths.get("panda/bamboo.txt"),
-//				  Paths.get("panda-save/bamboo.txt"));
-//		} catch (IOException e) {
-//			// Handle file I/O exception...
-//			System.out.println("Caught IOException :" + e);
-//		}
-//		System.out.println();
+		try {
+			 Files.deleteIfExists(Paths.get("panda-save/bamboo.txt"));
+		     Files.deleteIfExists(Paths.get("panda-save"));
+		     Files.copy(Paths.get("panda"), Paths.get("panda-save"));//if not created throws checked NoSuchFileException
+		     Files.copy(Paths.get("panda/bamboo.txt"), Paths.get("panda-save/bamboo.txt"));
+		} catch (IOException e) {
+			System.out.println("Caught IOException :" + e);
+		}
 		
 		try {
 //			  Files.createDirectory(Paths.get("panda"));
@@ -413,6 +423,7 @@ public class PathsAndFiles {
 		//*In this example, the InputStream and OutputStream parameters could refer to any valid
 		//stream, including website connections, in-memory stream resources, and so forth.
 		
+		System.out.println("\n** Changing a File Location with move() **\n");
 		/*
 		 * Changing a File Location with move()
 		 * 
@@ -430,14 +441,37 @@ public class PathsAndFiles {
 		 *  across a drive is supported, moving a non-empty directory across a drive
 		 *  will throw an NIO.2 DirectoryNotEmptyException .
 		 */
-//		try {
-//		   Files.deleteIfExists(Paths.get("in/zoo-new"));
-//		   Files.move(Paths.get("in/zoo"), Paths.get("in/zoo-new"));//rename zoo in zoo-new, since in the same directory
-//		   Files.move(Paths.get("in/user/addresses.txt"), Paths.get("in/zoo-new/addresses.txt"));//*
-//		} catch (IOException e) {
-//			System.out.println("Caught IOException : "+e);
-//		}
-		//NB* : Unlike mentioned in the OCP book, it does not rename address.txt in address2.txt
+		try {
+			   Files.deleteIfExists(Paths.get("in/zoo"));
+			   Files.createDirectory(Paths.get("in/zoo"));
+			   Files.deleteIfExists(Paths.get("in/zoo-new/addresses2.txt"));
+			   Files.deleteIfExists(Paths.get("in/zoo-new/addresses3.txt"));
+			   Files.deleteIfExists(Paths.get("in/zoo-new"));
+			   Files.deleteIfExists(Paths.get("in/user/addresses.txt"));
+			   Files.createFile(Paths.get("in/user/addresses.txt"));
+			   Files.move(Paths.get("in/zoo"), Paths.get("in/zoo-new"));//rename zoo in zoo-new, since in the same directory, by deleting atomically in/zoo
+			   Files.move(Paths.get("in/user/addresses.txt"), Paths.get("in/zoo-new/addresses2.txt"));//rename address.txt to address2.txt
+			   Files.move(Paths.get("in/zoo-new/addresses2.txt"), Paths.get("in/zoo-new/addresses2.txt"));
+		} catch (IOException e) {
+			System.out.println("Caught IOException : "+e);
+		}
+		
+		//Case of moving a non-empty directory in the same underlying drive Macintosh SSD
+		System.out.println("\n** Moving a non-empty directory in the same underlying drive Macintosh SSD **\n");
+	    try {
+	    	 	   Files.deleteIfExists(Paths.get("in/zoo-new2/addresses2.txt"));
+			   Files.deleteIfExists(Paths.get("in/zoo-new2"));
+	    	 	   Files.move(Paths.get("in/zoo-new"), Paths.get("in/zoo-new2"));//IT WORKS
+	    	 	   Files.move(Paths.get("in/zoo-new2"), Paths.get("in/zoo-new2"));//IT WORKS
+	    	 	   System.out.println("** Moving an already existing file **"); 
+	    	 	   Files.deleteIfExists(Paths.get("in/zoo-new3/addresses2.txt"));
+			   Files.deleteIfExists(Paths.get("in/zoo-new3"));
+			   Files.createDirectory(Paths.get("in/zoo-new3"));
+			   Files.createFile(Paths.get("in/zoo-new3/addresses2.txt"));
+	    	 	   Files.move(Paths.get("in/zoo-new3/addresses2.txt"), Paths.get("in/zoo-new2/addresses2.txt"));//It throws java.nio.file.FileAlreadyExistsException
+	    } catch (IOException e) {
+			System.out.println("Caught IOException : "+e);
+		}
 		
 		/*
 		 * Removing a File with delete() and deleteIfExists()
@@ -451,13 +485,13 @@ public class PathsAndFiles {
 		 * It WON'T throw an exception if the file or dir does not exist, but instead it will return false.
 		 * It will still throw an exception if the file or dir DOES exist but FAILS, such as not empty dir
 		 */
-		
+	    System.out.println("\n** Removing a File with delete() and deleteIfExists() **\n");
 		 try {
 			 Files.createDirectory(Paths.get("in/vulture"));
 			 Files.createFile(Paths.get("in/vulture/feathers.txt"));
 			 Files.delete(Paths.get("in/vulture/feathers.txt"));
 			 Files.delete(Paths.get("in/vulture"));
-			 Files.deleteIfExists(Paths.get("/pigeon"));
+			 System.out.println("delete '/pigeon' : "+Files.deleteIfExists(Paths.get("/pigeon")));
 		 } catch (IOException e) {
 			// Handle file I/O exception...
 			 System.out.println("Caught IOException : "+e);
@@ -466,11 +500,11 @@ public class PathsAndFiles {
 		 /*
 		  * Reading and Writing File Data with newBufferedReader() and newBufferedWriter()
 		  * 
-		  * 1) newBufferedReader(Path,Charset) reads the file specified by the Path location using a java.io.BufferedReader object. 
+		  * 1) static BufferedReader newBufferedReader(Path,Charset) reads the file specified by the Path location using a java.io.BufferedReader object. 
 		  *  It also requires a Charset for the character encoding to use to read the file
 		  *  NOTE: characters can be encoded in bytes in a variety of ways. Charset.defaultCharset() can be used to get the default Charset for the JVM
 		  * 
-		  * 2) newBufferedWriter(Path,Charset) writes to a file specified at the Path location using a java.io.BufferedWriter object. 
+		  * 2) static BufferedWriter newBufferedWriter(Path,Charset) writes to a file specified at the Path location using a java.io.BufferedWriter object. 
 		  *  It also takes a Charset for the character encoding to use to read the file
 		  *  
 		  *  NOTE: Both of these methods use buffered streams rather than low-level file streams.
@@ -502,7 +536,6 @@ public class PathsAndFiles {
 			 bw.write(cbuf, 1, 2);
 			 bw.write("\n");
 			 bw.write("supercalifragilispichespiralidoso", 9, 7);
-			 
 		 } catch (IOException e) {
 			 System.out.println("Caught IOException : "+e);
 		 }
@@ -518,11 +551,10 @@ public class PathsAndFiles {
 		  *       trying to load all of it into memory.
 		  */
 		 Path ptth = Paths.get("fish/sharks.log");
-		 try {
-			 final List<String> lines = Files.readAllLines(ptth);
-			 for(String line: lines) 
-				 System.out.println(line);
-				 
+		 try 
+		 { final List<String> lines = Files.readAllLines(ptth);
+		   for(String line: lines) 
+			   System.out.println(line);
 		 } catch (IOException e) {
 			 System.out.println("Caught IOException : "+e);
 		 }
@@ -531,12 +563,12 @@ public class PathsAndFiles {
 		  * READING APPROACH 3 : new streambased NIO.2 method that is far more performant on large files.
 		  */
 		 
-		 System.out.println("9.3.4. Understanding File Attributes");
+		 System.out.println("\n9.3.4. Understanding File Attributes");
 		 /*
 		  * 9.3.4. Understanding File Attributes
 		  * 
 		  * Reading Common Attributes with isDirectory(), isRegularFile(), and isSymbolicLink() of the the class Files
-		  * NOTE: They both DO NOT THROW AN EXCEPTION if the path does not exist
+		  * NOTE: They both DO NOT THROW AN EXCEPTION if the path does not exist. They both rather return false
 		  * 
 		  * boolean isRegular(Path p) returns true if the target is regular file, even for a symlink as long as the link resolves a regular file
 		  * regular file : one that contains content
@@ -559,7 +591,7 @@ public class PathsAndFiles {
 		 System.out.print("\n'"+pp2 +"' isDirectory() : " + Files.isDirectory(pp2));
 		 System.out.print(", isRegularFile() : " + Files.isRegularFile(pp2));
 		 System.out.print(", isSymbolicLink() : " + Files.isSymbolicLink(pp2));
-		 System.out.print("\n'"+pp4 +"' isDirectory() : " + Files.isDirectory(pp4));//**
+		 System.out.print("\n'"+pp4 +"' isDirectory() : " + Files.isDirectory(pp4));//Sys.link points to directory canine/coyote**
 		 System.out.print(", isRegularFile() : " + Files.isRegularFile(pp4));//**
 		 System.out.print(", isSymbolicLink() : " + Files.isSymbolicLink(pp4));
 		 
@@ -568,7 +600,9 @@ public class PathsAndFiles {
 		 System.out.println();
 		 /*
 		  * Checking File Visibility with isHidden()
+		  * It throws the checked IOException, as there may be an I/O error reading the underlying file information.
 		  */
+		 System.out.println("\nChecking File Visibility with isHidden()");
 		 try {
 			 Path hp = Paths.get("in/.walrus.txt");
 //			 final PosixFileAttributes posixAttrs  = Files.readAttributes(hp, PosixFileAttributes.class);
@@ -582,11 +616,21 @@ public class PathsAndFiles {
 		 }
 		 
 		 /*
+		  * Testing File Accessibility with isReadable() and isExecutable()
+		  * They both do not throw exceptions if the file does not exist but instead return false.
+		  */
+		  System.out.println("\nTesting File Accessibility with isReadable() and isExecutable()");
+		  System.out.println(Files.isReadable(Paths.get("seal/baby.png")));
+		  System.out.println(Files.isExecutable(Paths.get("seal/baby.png")));
+		  
+		 
+		 /*
 		  * Reading File Length with size()
 		  * 
 		  * Files.size(Path) method is used to determine the size of the file in bytes
 		  * 1 char is 1 byte long
 		  */
+		 System.out.println("\nReading File Length with size()");
 		 try {
 //			 Files.createDirectories(Paths.get("zoo/c"));
 //			 Files.createFile(Paths.get("zoo/c/animals.txt"));
@@ -594,6 +638,96 @@ public class PathsAndFiles {
 		 } catch (IOException e) {
 		 // Handle file I/O exception...
 		 }
+		 
+		 
+		 System.out.println("\nManaging File Modifications with getLastModifiedTime() and\n" + 
+		 		"		 setLastModifiedTime()");
+		 try {
+			 final Path p = Paths.get("rabbit/food.jpg");
+			 //1. static FileTime getLastModifiedTime(Path path, LinkOption... options) throws IOException
+			 System.out.println(Files.getLastModifiedTime(p).toMillis());
+			 
+			 //2. static Path setLastModifiedTime(Path path, FileTime time) throws IOException
+			 System.out.println(Files.setLastModifiedTime(p, FileTime.fromMillis(System.currentTimeMillis())));
+			 
+			 System.out.println(Files.getLastModifiedTime(p).toMillis());
+			 
+			 //NB: Both of these methods have the ability to throw a checked IOException when the file is
+			 //accessed or modified.
+		 } catch (IOException e) {
+			 
+		 }
+		 
+		 /* Managing Ownership with getOwner() and setOwner()
+		  * 
+		  * 	 abstract UserPrincipalLookupService getUserPrincipalLookupService()
+		  *  static FileSystem getDefault(), inside FileSystems factory
+		  *  FileSystem getFileSystem(); inside Path interface
+		  *  abstract UserPrincipalLookupService getUserPrincipalLookupService()
+		  *  abstract UserPrincipal lookupPrincipalByName(String name) throws IOException;
+		  *  
+		  */
+		 System.out.println("\nManaging Ownership with getOwner() and setOwner()");
+		 System.out.println("Retrieve UserPrincipal - Approach 1 - FileSystems.getDefault()");
+		 UserPrincipal owner = FileSystems.getDefault().getUserPrincipalLookupService()
+				 				.lookupPrincipalByName("matteodaniele");
+		 System.out.println(owner/*.getName()*/);//it invokes toString
+		 
+		 System.out.println("\nRetrieve UserPrincipal - Approach 2 - path..getFileSystem()");
+		 owner = Paths.get("rabbit/food.jpg").getFileSystem().getUserPrincipalLookupService()
+				 							.lookupPrincipalByName("matteodaniele");
+		 System.out.println(owner);
+		 
+		 System.out.println("\nRetrieve specific user  - Files.getOwner()");
+		 try {
+			 //Read owner of file
+			 Path ppp = Paths.get("chicken/feathers.txt");
+			 System.out.println(Files.getOwner(ppp).getName());
+			 
+			 //Change owner of file
+			 owner = ppp.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName("matteodaniele");
+			 Files.setOwner(ppp, owner);
+			 
+			 //Output the updated owner information
+			 System.out.println(Files.getOwner(ppp).getName());
+		 } catch (IOException e) {
+			 
+		 }
+		 
+		 /*
+		  * Improving Access with Views
+		  * 
+		  * View : group of related attributes for a particular file system type. it is useful to read multiple attributes of a file or dir at a time
+		  * Files.readAttributes(Path,Class<A>) and 
+		  * Both of these methods can throw a checked IOException, such as when the view class is unsupported.
+		  */
+		 System.out.println("\nImproving Access with Views");
+		 System.out.println("\nAccessing view info - method 1");
+		 //Method 1 - Files.readAttributes(), which returns a read-only view of the file view
+		 Path ptthh = Paths.get("turtles/sea.txt");
+		 BasicFileAttributes data = Files.readAttributes(ptthh, BasicFileAttributes.class);
+		 System.out.println("Is path a directory? "+data.isDirectory());
+		 System.out.println("Is path a regular file? "+data.isRegularFile());
+		 System.out.println("Is path a symbolic link? "+data.isDirectory());
+		 System.out.println("Path not a file, directory, nor symbolic link? "+data.isOther());
+		 
+		 System.out.println("Size (in bytes): "+data.size());
+		 
+		 System.out.println("Creation date/time: "+data.creationTime());
+		 System.out.println("Last modified data/time: "+data.lastModifiedTime());
+		 System.out.println("Last accessed date/time: "+data.lastAccessTime());
+		 System.out.println("Unique file identifier within the fs (if available ): "+data.fileKey());//null if it is not supported by the file system.
+		 
+		 System.out.println("\nAccessing view info - method 2");
+		 System.out.println(" Modifying Attributes with BasicFileAttributeView");
+		 //Method 2 - Files.getFileAttributeView(Path,Class<V>), which returns the underlying attribute view, and provides a direct resource for 
+		 //update the file system-dependent attributes..
+		 BasicFileAttributeView view = Files.getFileAttributeView(ptthh, BasicFileAttributeView.class);
+		 //NB: We can also use the view object to read the associated file system attributes
+		 BasicFileAttributes myData = view.readAttributes();
+		 FileTime lastModifiedTime = FileTime.fromMillis(data.lastModifiedTime().toMillis()+10_000);
+		 //void setTimes(FileTime lastModifiedTime,FileTime lastAccessTime, FileTime createTime) throws IOException;
+		 view.setTimes(lastModifiedTime, null, null);//Only one UPDATE method with three arguments
 		 
 		
 	}
