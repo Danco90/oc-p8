@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -21,8 +22,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Absolute vs. Relative Is File System Dependent
@@ -33,11 +36,13 @@ import java.util.List;
  * @author matteodaniele
  *
  */
+
 public class PathsAndFiles {
 
 	public static void main(String[] args) throws URISyntaxException, IOException {
 //		construct a Path using the Paths class
-		//A - get(String path)
+		//1  - get(String first, String... more) VARARGS
+		//1A - get("string")
 		//Path reference to a relative file into the current working directory ('/ocpairprogramming')
 		Path path1 = Paths.get("pandas/cuddly.png");
 		
@@ -47,16 +52,16 @@ public class PathsAndFiles {
 		//Path reference to an absolute directory ('/home') in a Linux or Mac-based system
 		Path path3 = Paths.get("/home/zoodirector");
 		
-		//B - get(String..varargs)
+		//1B - get("first", "second","n") VARARGS
 		path1 = Paths.get("pandas","cuddly.png");
 		path2 = Paths.get("c:","zooinfo","November","employees.txt");
 		path3 = Paths.get("/","home","zoodirector");
 		
-		//C - get(URI uri) - (*) we can use URI values, referencing absolute path, for both local and network paths
+		//2 - get(URI uri) - (*) we can use URI values, referencing absolute path, for both local and network paths
 		//path1 = Paths.get(new URI("file://pandas/cuddly.png")); // THROWS EXCEPTION (**) AT RUNTIME
 		//WORKAROUND 1 - Trying to use URI.getPath() before passing it to Paths.get()
 		URL url = new URL("file:///c:/zoo-info/November/employees.txt");
-		path1 = Paths.get(url.toURI().getPath());
+		path1 = Paths.get(url.toURI().getPath());//actually this workaround invokes Paths.get(String)
 		File file = Paths.get(url.toURI().getPath()).toFile();//throws MalformedURLException
 		//path2 = Paths.get(new URI("file:///c:/zoo-info/November/employees.txt"));//throws java.nio.file.FileSystemNotFoundException: Provider "http" not installed
 		path2 = Paths.get(new URL("file:///c:/zoo-info/November/employees.txt").toURI().getPath());//throws MalformedURLException
@@ -86,6 +91,11 @@ public class PathsAndFiles {
 		Path p2 = FileSystems.getDefault().getPath("c:", "zooinfo", "November");// c:/zooinfo/November
 		Path p3 = FileSystems.getDefault().getPath("/home/zoodirector");
 		
+		//FileSystem getFileSystem() Connecting to a REMOTE FS
+		System.out.println("\nFileSystem getFileSystem() Connecting to a REMOTE FS");
+		final URI uri = new URI("http://localhost:8000/");
+//		final Path rootPath = FileSystems.getFileSystem(uri).getPath("");//It throws a java.nio.file.ProviderNotFoundException: Provider "http" not found
+//		System.out.println("rootPath= '"+rootPath+"'");
 		//Working with Legacy File Interface
 		File ff = new File("pandas/cuddly.png");
 		Path path = file.toPath();
@@ -103,7 +113,7 @@ public class PathsAndFiles {
 		 * Viewing the Path with 
 		 * toString(), int getNameCount(),and Path getName(int index)
 		 */
-		//Case Absolute path
+		//Case Relative path
 		System.out.println("BASIC INFO : Case relative path");
 		Path pt = Paths.get("land/hippo/harry.happy");//relative
 		System.out.println("The Path Name is: "+pt);//automatically invokes the object's toString()
@@ -193,23 +203,36 @@ public class PathsAndFiles {
 		// NB : Note that the file system is not accessed to perform this comparison and the code will compile since Java is referencing the path elements and not the actual file values.
 		// NB2: it does not clean up path symbols
 		System.out.println("\n absolPathA .relativize( absolPathB)");
-		//Example B1 - WINDOWS
+		System.out.println(" Example B1 - WINDOWS");
+		//Example B1a - FOR WINDOWS but executed in MAC
 		Path absolPathA = Paths.get("E:\\habitat");
 		Path absolPathB = Paths.get("E:\\sanctuary\\raven");
 		System.out.println(absolPathA.relativize(absolPathB));// ../E:\sanctuary\raven
 		System.out.println(absolPathB.relativize(absolPathA));// ../E:\habitat
 		
-		//Example B2 - MAC
-		absolPathA = Paths.get("/habitat");
-		absolPathB = Paths.get("/sanctuary/raven");
-		System.out.println("\n"+absolPathA.relativize(absolPathB));// ../E:\sanctuary\raven
-		System.out.println(absolPathB.relativize(absolPathA));// ../E:\habitat
+		//Example B1b - WINDOWS executed on WINDOWS
+//		System.out.println(absolPathA.relativize(absolPathB));//* ..\sanctuary\raven
+//		System.out.println(absolPathB.relativize(absolPathA));//* ..\..\habitat
+		//NB: the drive letter is omitted, since both path are relativized under the same letter E: 
 		
-		//Example B3 - Exception thrown in MAC
-		Path path11 = Paths.get("/primate/chimpanzee");
+		//Example B2 - MAC
+		System.out.println(" Example B2 - MAC");
+		absolPathA = Paths.get("/habitat");//it won't print anything since absol /habitat does not exist
+		absolPathB = Paths.get("/sanctuary/raven");//and neither does it
+		System.out.println("\n"+absolPathA.relativize(absolPathB));// 
+		System.out.println(absolPathB.relativize(absolPathA));// 
+		absolPathA = Paths.get("habitat");
+		absolPathB = Paths.get("sanctuary/raven");
+		System.out.println("\n"+absolPathA.relativize(absolPathB));// ../sanctuary/raven
+		System.out.println(absolPathB.relativize(absolPathA));// ../../habitat
+		
+		//Example B3 - Mixed Abs and relative paths - Exception thrown in MAC
+		System.out.println(" Example B3 - Exception thrown in MAC");
+//		Path path11 = Paths.get("/Users/matteodaniele/git/oc-pee/ocpairprogramming/primate/chimpanzee");//no need to specify the ral absolute file because it does not check if the file really exists
+		Path path11 = Paths.get("/primate/chimpanzee");//no need to specify the real absolute file because it does not check if the file really exists	
 		Path path22 = Paths.get("bananas.txt");
 		try{
-			System.out.println("\n"+path11.relativize(path22)); // THROWS EXCEPTION AT RUNTIME only in Mac
+			System.out.println("\n"+path11.relativize(path22)); // THROWS EXCEPTION AT RUNTIME only in Mac because one is absolute and another is relative
 		} catch (Exception e) {
 			System.out.println("caught exception "+e);
 		}
@@ -218,7 +241,7 @@ public class PathsAndFiles {
 		Path path111 = Paths.get("c:\\primate\\chimpanzee");
 		Path path222 = Paths.get("d:\\storage\\bananas.txt");
 		try{
-			System.out.println("\n"+path111.relativize(path222)); // THROWS EXCEPTION AT RUNTIME ONLY in Windows
+			System.out.println("\n"+path111.relativize(path222)); // THROWS EXCEPTION AT RUNTIME ONLY in Windows because they are on different root dirs or drive letters
 		} catch (Exception e) {
 			System.out.println("caught exception "+e);
 		}
@@ -228,10 +251,12 @@ public class PathsAndFiles {
 		//Basically, the object on which the resolve() method is invoked becomes the basis of the new Path object, with the input argument being
 		//appended onto the Path.
 		// NB: it does not clean up path symbols
+		System.out.println("\nCase resolve() between two relative or mixed paths");
 		final Path path1111 = Paths.get("/cats/../panther");
 		final Path path2222 = Paths.get("food");
 		try{
-			System.out.println("\n"+path1111.resolve(path2222)); // /cats/../panther/food
+			System.out.println(path1111.resolve(path2222)); // /cats/../panther/food
+			System.out.println(Paths.get("drink").resolve(path2222)); // /drink/food
 		} catch (Exception e) {
 			System.out.println("caught exception "+e);
 		}
@@ -253,7 +278,8 @@ public class PathsAndFiles {
 		Path path1114 = Paths.get("E:\\data");//*
 		Path path1115 = Paths.get("E:\\user\\home");
 		//* in windows the escape char '/' is needed before slash /. But when printed will not be considered
-		Path relativePath = path1114.relativize(path1115);/* ../E:\\user\home on Mac , whereas ..\\user\home on Windows */
+		Path relativePath = path1114.relativize(path1115);// ../ E:\ user\home on Mac , whereas ..\ user\home on Windows 
+		System.out.println(relativePath);
 		try{
 			System.out.println(path1114.resolve(relativePath)); //  E:\data/../E: \ user\home on Mac , whereas 'E:\data\..\ user\home' on Windows 
 			System.out.println("normalized Without redundancies : " +path1114.resolve(relativePath).normalize()); // 'E:\ user\home'
@@ -268,7 +294,7 @@ public class PathsAndFiles {
 		//B- unlike toAbsolutePath, it also verifies that the file referenced by the path actually exists. If not, it throws an exception.
 		//C- it is also the only Path method to support the NOFOLLOW_LINKS option.
 		//D- as additional steps, it also remove redundant path elements. It, basically, calls normalize() on the resulting absolute path.
-		//E- it's used also to gain access to the current working directory
+		//E- it's used also to gain access to the current working directory Paths.get(".").toRealPath()
 		
 		System.out.println("\nPath toRealPath(Path) throws IOexception ");
 		//Example of symbolic link from /zebra/food.source -> /horse/food.txt and 
@@ -277,10 +303,9 @@ public class PathsAndFiles {
 			//CASE A of relatives paths, following any symbolik links BY DEFAULT (if not specified the vararg)
 			System.out.println("\n"+Paths.get("zebra/food.source").toRealPath());//It would print* /horse/food.txt because of the symb.link. 
 			//relative
-			System.out.println(Paths.get("horse/schedule/.././food.txt").toRealPath());//It would print* /horse/food.txt since it goes one level up schedule and one level down horse
+			System.out.println(Paths.get("horse/schedule/.././food.txt").toRealPath());//It would print /horse/food.txt since it goes one level up schedule and one level down horse
 			//In this case both Absolute and relative resolve to the same ABSOLUTE file /horse/food.txt, as the symb.link points to a real file.
-			System.out.println(Paths.get("horse/schedule/.././food1.txt").toRealPath());
-		//(*) NB IT ACTUALLY DOES NOT PRINT ANYTHING as there is not path with symb link in the current directory
+			System.out.println(Paths.get("horse/schedule/.././food1.txt").toRealPath());//IT ACTUALLY DOES NOT PRINT ANYTHING as there is not path with symb link in the current directory, but it throws a NoSuchFileException 
 		} catch (IOException e) {
 			System.out.println("caught exception "+e);
 		}
@@ -312,14 +337,15 @@ public class PathsAndFiles {
 		
 		//Interacting with Files
 		System.out.println("\n** Interacting with Files **\n");
-		//static boolean  exists(Path) , prevent what comes next from throwing exception if file does not exist
+		//static boolean exists(Path path, LinkOption... options) , prevents what comes next from throwing exception if file does not exist
 		System.out.println(Files.exists(Paths.get("/ostrich/feathers.png")));//check if the file exists
 		System.out.println(Files.exists(Paths.get("/ostrich")));//check if the directory exists
 		
 		/*Testing Uniqueness with boolean isSameFile(Path, Path) throws IOException
 		 * It determines  
 		 * - whether two Paths relate to the same file within the fs by calling equal().
-		 *    If not, then it locates each file in the fs and check if they are the same, throwing a checked IOException if either file does not exist.
+		 *    If not, then it locates each file in the fs and check if they are the same (at the same location), 
+		 *    throwing a checked IOException if either file does not exist.
 		 *    isSameFile() DOES NOT compare the contents of the files. Two files are not equal if they have the SAME CONTENT BUT are in DIFFERENT LOCATIONS!
 		 * 
 		 * - if two Paths refere to the same directory within the fs;
@@ -333,19 +359,21 @@ public class PathsAndFiles {
 		/*
 		 * Making Directories 
 		 * |java.io API             |  NIO.2 API
-		 * +------------------------+-----------------
+		 * +------------------------+------------------------------------------------------
 		 * |mkdir()  on a File      |static Path createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException 
 		 * |mkdirs() on a File      |static Path createDirectories(Path dir, FileAttribute<?>... attrs) throws IOException
 		 * */
 		//Both methods 
-		// -work only with existing parent directories (if specified in the path) 
-		// -throw a checked IOException if the dir cannot be created or already exists.
-		// -If the directory exists, throws FileAlreadyExistsException.
+		
+		
 		// -If IO errors, throws IOException.
 		// -accept an optional list of FileAttribute<?> values to set on
-		//  the newly created directory or directories.
+		//    the newly created directory or directories.
 		
 		// Only createDirectory() method
+		// -throw a checked IOException if the dir cannot be created or already exists.
+		// -If the directory exists, throws FileAlreadyExistsException.
+		// -works only with existing parent directories (if specified in the path) 
 		//  If the parent directory in which the new dir resides does not exist, throws NoSuchFileException.
 	
 		System.out.println("\n** Making Directories with Files.createDirectory() and Files.createDirectories() **\n");
@@ -353,23 +381,34 @@ public class PathsAndFiles {
 		{ Files.deleteIfExists(Paths.get("bison/field/pasture/green"));
 		  Files.deleteIfExists(Paths.get("bison/field/pasture"));
 		  Files.deleteIfExists(Paths.get("bison/field"));
-		  Files.createDirectory(Paths.get("bison/field"));//it throws exception, since bison does not exist
-		  Files.createDirectories(Paths.get("bison/field/pasture/green"));//and so does it	
+		  Files.createDirectory(Paths.get("bison/field"));//it throws exception if bison does not exist
+		  Files.createDirectories(Paths.get("bison/field/pasture/green"));//and so does it
+//		  Files.createDirectory(Paths.get("bison"));//But this throws ava.nio.file.FileAlreadyExistsException: bison
+//	      Files.createDirectory(Paths.get("bison/field"));//and so does* this
+		  Files.createDirectories(Paths.get("bison/field/pasture"));//It works and overrites /pasture already existing dir
+		  Files.createDirectories(Paths.get("bison/field/pasture/green"));//and obviously this one works* by overwriting all the dirs already existing		
+		  //Files.createDirectory(Paths.get("bison/field/pasture/green"));//throws exception for already existing file
 		} catch (IOException e) {
 			System.out.println("Caught IOException :" + e);
 		}
 		
-		try 
-		{   
-//		    Files.createDirectory(Paths.get("bison") );//But this does work*. 
-//			Files.createDirectory(Paths.get("bison/field"));//and so does* this
-			Files.createDirectories(Paths.get("bison/field/pasture/green"));//and obviously this one works* as well
-			//(*) or throws exception if already existing
-		} catch (IOException e) {
-			// Handle file I/O exception...
-				System.out.println("Caught IOException :" + e);
-	    }
-		
+		//TRICKY CASE of creating directories with symbolic links
+		System.out.println("\n** TRICKY CASE of creating directories with symbolic link symlinks/kang -> symlinks/mammal/kangaroo **\n");
+		//symlinks/kang -> symlinks/mammal/kangaroo
+//		Path syslink = Paths.get("kang");
+		Path syslink = Paths.get("symlinks/kang");
+		if(Files.isDirectory(syslink) && Files.isSymbolicLink(syslink)) {
+			Files.deleteIfExists(Paths.get("symlinks/kang/joey/dowson/pesy"));
+			Files.deleteIfExists(Paths.get("symlinks/kang/joey/dowson"));
+			Files.deleteIfExists(Paths.get("symlinks/kang/joey"));
+			Files.deleteIfExists(Paths.get("symlinks/mammal/kangaroo/joey/dowson/pesy"));
+			Files.deleteIfExists(Paths.get("symlinks/mammal/kangaroo/joey/dowson"));
+			Files.deleteIfExists(Paths.get("symlinks/mammal/kangaroo/joey"));
+			Files.createDirectory(syslink.resolve("joey"));//*it does  create both /kang/joey syslink-dir and directory 'mammal/kangaroo/joey
+		    Files.createDirectories(syslink.resolve("joey/dowson/pesy"));//*also does it create both /kang/joey/pesy syslink-dirs and directories in 'mammal/kangaroo/joey/pesy'
+		    
+		}
+
 		System.out.println("\n** Duplicating File Contents with copy() **\n");
 		/* Duplicating File Contents with copy()
 		 * 
@@ -392,7 +431,8 @@ public class PathsAndFiles {
 //			  Files.createDirectory(Paths.get("panda"));
 //			  Files.createFile(Paths.get("panda/bamboo.txt"));
 //			  Files.createDirectory(Paths.get("panda-save"));
-//			  Files.copy(Paths.get("panda"), Paths.get("panda-save"), StandardCopyOption.REPLACE_EXISTING);//"2nd time it Throws DirectoryNotEmptyException
+//			  Files.copy(Paths.get("panda"), Paths.get("panda-save"));// FileAlreadyExistingException : panda-save
+//			  Files.copy(Paths.get("panda"), Paths.get("panda-save"), StandardCopyOption.REPLACE_EXISTING);//"whereas this time it DirectoryNotEmptyException 
 			  Files.copy(Paths.get("panda/bamboo.txt"),
 					  Paths.get("panda-save/bamboo.txt"), StandardCopyOption.REPLACE_EXISTING );
 		} catch (IOException e) {
@@ -427,11 +467,12 @@ public class PathsAndFiles {
 		/*
 		 * Changing a File Location with move()
 		 * 
-		 * The Files.move(Path,Path, CopyOption) method moves or renames a file or directory within the file system.
+		 * The Files.move(Path,Path, CopyOption) method moves and renames (at the same time) a file or directory within the file system.
 		 * - It throws the checked IOException in the event that the file or dir could not be found or moved.
-		 * By default, the move() method will 
-		 * 	follow links, 
-		 * 	throw an exception if the file already exists, 
+		 * By DEFAULT, the move() method will 
+		 * 	RENAME a source file/dir to a dest file/dir
+		 *  follow links, 
+		 * 	NOT REPLACE any existing dir/file: by throwing an exception if the file already exists, unless it REPLACE_EXISTING attrib is specified  
 		 *  and not perform an atomic move.
 		 *  NOTE1: If the fs does not support atomic moves (when ATOMIC_MOVE specified), an 
 		 *  AtomicMoveNotSupportedException will be thrown
@@ -445,13 +486,23 @@ public class PathsAndFiles {
 			   Files.deleteIfExists(Paths.get("in/zoo"));
 			   Files.createDirectory(Paths.get("in/zoo"));
 			   Files.deleteIfExists(Paths.get("in/zoo-new/addresses2.txt"));
-			   Files.deleteIfExists(Paths.get("in/zoo-new/addresses3.txt"));
 			   Files.deleteIfExists(Paths.get("in/zoo-new"));
 			   Files.deleteIfExists(Paths.get("in/user/addresses.txt"));
 			   Files.createFile(Paths.get("in/user/addresses.txt"));
 			   Files.move(Paths.get("in/zoo"), Paths.get("in/zoo-new"));//rename zoo in zoo-new, since in the same directory, by deleting atomically in/zoo
 			   Files.move(Paths.get("in/user/addresses.txt"), Paths.get("in/zoo-new/addresses2.txt"));//rename address.txt to address2.txt
-			   Files.move(Paths.get("in/zoo-new/addresses2.txt"), Paths.get("in/zoo-new/addresses2.txt"));
+			   System.out.println("\n** CASE A : move() with source = dest && dest already existing **\n");
+			   Files.move(Paths.get("in/zoo-new/addresses2.txt"), Paths.get("in/zoo-new/addresses2.txt"));//WHY DOES NOT THROW an exception? Because the file is the same ?
+			   
+			   System.out.println("** CASE B : move() with REPLACE_EXISTING, given source != dest and dest already existing **\n");
+			   Files.deleteIfExists(Paths.get("in/user/pino.txt"));
+			   Files.createFile(Paths.get("in/user/pino.txt"));
+			   Files.move(Paths.get("in/user/pino.txt"), Paths.get("in/zoo-new/addresses2.txt"), StandardCopyOption.REPLACE_EXISTING);//IT WORKS
+			    
+			   System.out.println("** CASE C : move() with source != dest and dest already existing **\n");
+			   Files.createFile(Paths.get("in/user/pino.txt"));
+			   Files.move(Paths.get("in/user/pino.txt"), Paths.get("in/zoo-new/addresses2.txt"));//IT DOES THROW an exception Because the source is != dest and dest DOES already exists
+			    
 		} catch (IOException e) {
 			System.out.println("Caught IOException : "+e);
 		}
@@ -462,7 +513,7 @@ public class PathsAndFiles {
 	    	 	   Files.deleteIfExists(Paths.get("in/zoo-new2/addresses2.txt"));
 			   Files.deleteIfExists(Paths.get("in/zoo-new2"));
 	    	 	   Files.move(Paths.get("in/zoo-new"), Paths.get("in/zoo-new2"));//IT WORKS
-	    	 	   Files.move(Paths.get("in/zoo-new2"), Paths.get("in/zoo-new2"));//IT WORKS
+	    	 	   Files.move(Paths.get("in/zoo-new2"), Paths.get("in/zoo-new2"));//IT WORKS (WHYYY)
 	    	 	   System.out.println("** Moving an already existing file **"); 
 	    	 	   Files.deleteIfExists(Paths.get("in/zoo-new3/addresses2.txt"));
 			   Files.deleteIfExists(Paths.get("in/zoo-new3"));
@@ -492,25 +543,27 @@ public class PathsAndFiles {
 			 Files.delete(Paths.get("in/vulture/feathers.txt"));
 			 Files.delete(Paths.get("in/vulture"));
 			 System.out.println("delete '/pigeon' : "+Files.deleteIfExists(Paths.get("/pigeon")));
+			 System.out.println("delete not empty 'in/zoo-new2' : "+Files.deleteIfExists(Paths.get("in/zoo-new2")));//it throws  java.nio.file.DirectoryNotEmptyException: in/zoo-new2
 		 } catch (IOException e) {
 			// Handle file I/O exception...
 			 System.out.println("Caught IOException : "+e);
 		 }
 		 
 		 /*
-		  * Reading and Writing File Data with newBufferedReader() and newBufferedWriter()
+		  * Reading and Writing File Data with newBufferedReader() and newBufferedWriter() of the class Files
 		  * 
 		  * 1) static BufferedReader newBufferedReader(Path,Charset) reads the file specified by the Path location using a java.io.BufferedReader object. 
 		  *  It also requires a Charset for the character encoding to use to read the file
 		  *  NOTE: characters can be encoded in bytes in a variety of ways. Charset.defaultCharset() can be used to get the default Charset for the JVM
 		  * 
 		  * 2) static BufferedWriter newBufferedWriter(Path,Charset) writes to a file specified at the Path location using a java.io.BufferedWriter object. 
-		  *  It also takes a Charset for the character encoding to use to read the file
+		  *  It also takes a Charset for the character encoding to use to write the file
 		  *  
 		  *  NOTE: Both of these methods use buffered streams rather than low-level file streams.
 		  *        Buffered stream are much more performant, so much so that ("tanto (è vero) che") the NIO.2 API includes methods that
 		  *        specifically return these stream classes.
 		  * */
+		 System.out.println("\n** Reading and Writing File Data with newBufferedReader() and newBufferedWriter() **\n");
 		 Path pthr = Paths.get("animals/gopher.txt");
 		 try (BufferedReader br = Files.newBufferedReader(pthr, Charset.forName("US-ASCII"))) {
 			// Read from the stream
@@ -535,7 +588,10 @@ public class PathsAndFiles {
 			 bw.write("\n");
 			 bw.write(cbuf, 1, 2);
 			 bw.write("\n");
-			 bw.write("supercalifragilispichespiralidoso", 9, 7);
+			 bw.write("supercalifragilispichespiralidoso", 9, 7);//*It's 0-based index as it ALWAYS starts from index 0
+			
+			 bw.write("\n");
+			 bw.write("supercalifragilispichespiralidoso", 0, 1);//
 		 } catch (IOException e) {
 			 System.out.println("Caught IOException : "+e);
 		 }
@@ -550,6 +606,7 @@ public class PathsAndFiles {
 		  *       Therefore, if the file is significantly large, you may encounter an OutOfMemoryError 
 		  *       trying to load all of it into memory.
 		  */
+		 System.out.println("\nREADING APPROACH 2 :static List<String> readAllLines(Path path) throws IOException");
 		 Path ptth = Paths.get("fish/sharks.log");
 		 try 
 		 { final List<String> lines = Files.readAllLines(ptth);
@@ -560,8 +617,17 @@ public class PathsAndFiles {
 		 }
 		 
 		 /*
-		  * READING APPROACH 3 : new streambased NIO.2 method that is far more performant on large files.
+		  * READING APPROACH 3 : Files.lines(paath), as a new streambased NIO.2 method that is far more performant on large files.
+		  * static Stream<String> lines(Path path) throws IOException
 		  */
+		//Printing File Contents
+			System.out.println("\nREADING APPROACH 3 :static Stream<String> lines(Path path) throws IOException");
+			Path paath = Paths.get("fish/sharks.log");
+			try {
+				Files.lines(paath).forEach(System.out::println);
+			} catch (IOException e) {
+				System.out.println("caught IOException "+e);
+			}
 		 
 		 System.out.println("\n9.3.4. Understanding File Attributes");
 		 /*
@@ -648,8 +714,10 @@ public class PathsAndFiles {
 			 System.out.println(Files.getLastModifiedTime(p).toMillis());
 			 
 			 //2. static Path setLastModifiedTime(Path path, FileTime time) throws IOException
+			 //   	   static FileTime fromMillis(long value), inside FileTime class
 			 System.out.println(Files.setLastModifiedTime(p, FileTime.fromMillis(System.currentTimeMillis())));
 			 
+			 //static FileTime getLastModifiedTime(Path path, LinkOption... options)
 			 System.out.println(Files.getLastModifiedTime(p).toMillis());
 			 
 			 //NB: Both of these methods have the ability to throw a checked IOException when the file is
@@ -660,12 +728,13 @@ public class PathsAndFiles {
 		 
 		 /* Managing Ownership with getOwner() and setOwner()
 		  * 
-		  * 	 abstract UserPrincipalLookupService getUserPrincipalLookupService()
 		  *  static FileSystem getDefault(), inside FileSystems factory
+		  *  static FileSystem getFileSystem(URI uri) inside FileSystems factory
 		  *  FileSystem getFileSystem(); inside Path interface
-		  *  abstract UserPrincipalLookupService getUserPrincipalLookupService()
-		  *  abstract UserPrincipal lookupPrincipalByName(String name) throws IOException;
-		  *  
+		  *  abstract UserPrincipalLookupService getUserPrincipalLookupService() inside FileSystem
+		  *  abstract UserPrincipal lookupPrincipalByName(String name) throws IOException; inside abstract class UserPrincipalLookupService
+		  *  abstract GroupPrincipal lookupPrincipalByGroupName(String group) throws IOException;
+		  *  static UserPrincipal getOwner(Path path, LinkOption... options) throws IOException, inside the Files class
 		  */
 		 System.out.println("\nManaging Ownership with getOwner() and setOwner()");
 		 System.out.println("Retrieve UserPrincipal - Approach 1 - FileSystems.getDefault()");
@@ -698,7 +767,9 @@ public class PathsAndFiles {
 		  * Improving Access with Views
 		  * 
 		  * View : group of related attributes for a particular file system type. it is useful to read multiple attributes of a file or dir at a time
-		  * Files.readAttributes(Path,Class<A>) and 
+		  *  BasicFileAttributes readAttributes(Path,Class<A>) and  
+		  *  BasicFileAttributeView Files.getFileAttributeView(Path, Class<A>); 
+		  *  	BasicFileAttributes readAttributes() throws IOException; , inside BasicFileAttributeView
 		  * Both of these methods can throw a checked IOException, such as when the view class is unsupported.
 		  */
 		 System.out.println("\nImproving Access with Views");
