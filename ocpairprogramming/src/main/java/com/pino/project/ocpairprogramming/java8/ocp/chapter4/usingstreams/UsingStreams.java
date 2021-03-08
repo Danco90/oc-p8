@@ -8,12 +8,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UsingStreams {
 
 	public static void main(String[] args) {
+		
+		//Tricky example : Watch from omitting generic with functional interfaces.
+		Object obj = new Object();
+		Predicate predipino  = obj::equals;// OK since it is a method ref. with instance already available
+//		Predicate predipino2  = Object::equals;//DOES NOT COMPILE since it equals it is not static 
+		Predicate predipino3 = (Object obj3) -> obj3.equals(null);
 		
 		//How to create a STREAM
 		//CASE 1) Factory Stream.of()

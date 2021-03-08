@@ -6,6 +6,7 @@ import java.util.Optional;
  * Table 4 . 2 Optional instance methods
 * +-------------------------+----------------------------+---------------------------------+
 * |Method					|When Optional Is Empty 		|When Optional Contains a Value
+* |
 * |get() 					|Throws an exception 		|Returns value
 * |ifPresent(Consumer c) 	|Does nothing 				|Calls Consumer c with value
 * |isPresent() 				|Returns false 				|Returns true

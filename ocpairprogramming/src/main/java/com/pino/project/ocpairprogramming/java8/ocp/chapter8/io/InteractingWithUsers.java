@@ -2,9 +2,9 @@ package com.pino.project.ocpairprogramming.java8.ocp.chapter8.io;
 
 import java.io.BufferedReader;
 import java.io.Console;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 
 public class InteractingWithUsers {
@@ -74,6 +74,12 @@ public class InteractingWithUsers {
 			
 			System.out.format("Your password was %s", (match ? "correct" : "incorrect"));
 		}
+		
+//		try {
+//			new InteractingWithUsers().resetWorkingDirectory();
+//		} catch (Exception e) {
+//			new RuntimeException(e);
+//		}
 	}
 	
 	private static void passwordCompareSample(Console console) throws IOException {
@@ -154,6 +160,16 @@ public class InteractingWithUsers {
 			console.printf("Your ecitement level is: "+ excitementAnswer);
 		}
 		
+	}
+	
+	public void resetWorkingDirectory() throws Exception {
+		File f1 = new File("animals/templates/proofs");
+		f1.mkdirs();
+		File f2 = new File("animals/templates");
+		f2.mkdir(); // k1
+		new File(f2,"draft.doc").createNewFile();
+		f1.delete();
+		f2.delete(); // k2
 	}
 
 }
