@@ -28,6 +28,8 @@ public class OptionalDemo {
 		if (scores.length == 0) return Optional.empty();
 		int sum = 0;
 		for(int score: scores) sum += score;
+		//int res = sum / scores.length;//from OCA by DEFAULT int / int is int
+		//return Optional.of(res);//It does not compile as res is autoboxed in Integer
 		return Optional.of((double) sum / scores.length);
 	}
 	
