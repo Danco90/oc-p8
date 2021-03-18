@@ -82,7 +82,7 @@ public class OptionalWithPrimitiveStream {
 		long sum = longs.sum();
 		System.out.println(sum);
 		
-//		OptionalDouble avg()   *
+//		OptionalDouble average()   *
 		longs = LongStream.of(5, 10);
 //		OptionalDouble average = longs.avg();//DOES NOT COMPILE because it doesn't exist
 		OptionalDouble average = longs.average();
