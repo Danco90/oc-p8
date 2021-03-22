@@ -10,27 +10,28 @@ public class Match {
 		System.out.println("ITERATE MATCH 1:");
 		Predicate<? super Integer> predicate2 = s-> s >3;
 //		Stream<Integer> stream3 = Stream.iterate(1, (s)->/*++s*/s++); //.iterate() does not work properly with post increment. it hangs because the predicate condition is never met
-//		stream3.forEach(System.out::println); //ddd dddddd
-//		boolean b23 = stream3.anyMatch(predicate2); //true
+		Stream<Integer> stream3 = Stream.iterate(1, (s)->++s); 
+//		stream3.forEach(System.out::println); 
+		boolean b23 = stream3.anyMatch(predicate2); //true
 //		boolean b23 = stream3.allMatch(predicate2); //false
 //		boolean b23 = stream3.noneMatch(predicate2); //false
-//		System.out.println(b23);
+		System.out.println(b23);
 		
 		/*
 	     * first param stopOnPredicateMatches
 	     * second param shortCircuitResult
-	    ANY(true, true),   //if(true) match. --> true
-        ALL(false, false),  // if(false) match. --> false
-        NONE(true, false);  //if(true) match. --> false
+	    ANY(true, true),   //if(true) match. --> true .Indeed, it is enough finding at least one true match in order stop the search and return.
+        ALL(false, false),  // if(false) match. --> false. If it finds at least a condition not fullfilled (false), it will never happen that ALL are true in AND logic
+        NONE(true, false);  //if(true) match. --> false. If it finds at least a condition true, it will never happen that ALL are false (or NONE is true)
 	    */
 		
 		System.out.println("ITERATE MATCH 2:");
 		Predicate<? super String> predicate2e = s-> s.isEmpty();
 		Stream<String> stream3e = Stream.iterate("ddd", (s)->s+s); 
 		//stream3e.forEach(System.out::println); //ddd dddddd ....
-		//boolean b23e = stream3e.anyMatch(predicate2e); //infinite 
+//		boolean b23e = stream3e.anyMatch(predicate2e); //infinite : It hangs & throws java.lang.OutOfMemoryError: Java heap space
 		boolean b23e = stream3e.allMatch(predicate2e); //false  
-		//boolean b23e = stream3e.noneMatch(predicate2e); //infinite &
+//		boolean b23e = stream3e.noneMatch(predicate2e); //infinite : It hangs & throws java.lang.OutOfMemoryError: Java heap space
 		System.out.println(b23e);
 		
 		System.out.println("ITERATE MATCH 2b:");
@@ -48,9 +49,9 @@ public class Match {
 		Predicate<? super String> predicateI = s -> s.startsWith("g"); 
 		Stream<String> streamI = Stream.iterate("", (s)->"growl! "); 
 //		streamI/*.limit(2)*/.forEach(System.out::println); // "<empty>" growl! ....
-//		boolean bI = streamI.anyMatch(predicateI); //true
-//		boolean bI = streamI.allMatch(predicateI);  //false
-		boolean bI = streamI.noneMatch(predicateI);  //false because it founds out NONE(true, false); at the second element
+//		boolean bI = streamI.anyMatch(predicateI); //true as it founds out ANY(true, true); at the second element "growl! "
+//		boolean bI = streamI.allMatch(predicateI);  //false as it founds out NONE(false, false); at the first element ""
+		boolean bI = streamI.noneMatch(predicateI);  //false because it founds out NONE(true, false); at the second element "growl! "
 	    System.out.println(bI);
 	    
 	  
@@ -67,11 +68,12 @@ public class Match {
 		System.out.println("GENERATE MATCH 1:");
 		//Infinite Stream
 		Predicate<? super String> predicate = s -> s.startsWith("g");
-		Stream<String> stream1 = Stream.generate(()->"growl! ").limit(2); //try the same with iterate
+		Stream<String> stream1 = Stream.generate(()->"growl! ")
+				.limit(2); //try the same with iterate
 		//stream1.forEach(System.out::println); //growl! growl!
-		boolean b1 = stream1.anyMatch(predicate); //true 
-		//boolean b1 = stream1.allMatch(predicate); //infinite stream. It needs to keep going until the end of the stream
-	    //boolean b1 = stream1.noneMatch(predicate); //false
+//		boolean b1 = stream1.anyMatch(predicate); //true 
+		boolean b1 = stream1.allMatch(predicate); //true. But it hangs for infinite stream (no limit). It needs to keep going until the end of the stream
+//	    boolean b1 = stream1.noneMatch(predicate); //always false for both finite and infinite stream of this example (with or without limit())
 		System.out.println(b1);
 		
 		/*

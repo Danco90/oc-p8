@@ -37,7 +37,8 @@ public class ExceptionCaseStudy {
 			}
 		};
 			
-		//Proper solution : we catch the checked exception and turn it into an unchecked one
+		//Proper solutions : we catch the checked exception and turn it into an unchecked one
 		Supplier<List<String>> s2 = ExceptionCaseStudy::createSafe;
+		
 	}
 }

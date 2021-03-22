@@ -54,35 +54,42 @@ public class OptionalWithPrimitiveStream {
 	}
 
 	public static void main(String[] args) {
-		
+		//OptionalDouble average(); since the average, which can be floating point, cannot be calculated without any items
 		//Example 1 - OptionalDouble not empty
 		IntStream stream = IntStream.rangeClosed(1,10);
+		
 		OptionalDouble optional = stream.average();
+		//Safe approach regardless whether it is present or not. It prevents NoSuchElementException when it is not present
 		//void ifPresent(DoubleConsumer consumer)
-		optional.ifPresent(System.out::println);//if present, it will print the primitive double inside the OptionalDouble
+		optional.ifPresent(System.out::println);//if present, it will print the primitive double contained inside the OptionalDouble
+		//Bad approach if optional does not have any value, neither is it empty. It throws NoSuchElementException when it is not present
 		System.out.println(optional.getAsDouble());//it will print the double contained inside the OptionalDouble if exists. 
+		//Better and Safer Alternative approach which cover also the condition when it is not present and handles it
 		//double orElseGet(DoubleSupplier other)
 		System.out.println(optional.orElseGet(() -> Double.NaN));//if present it will print the content of the Optional. If no content, it will print a constant holding a Not-a-Number
 		System.out.println();
 		
 		//Example 2 - Empty OptionalDouble
 		stream = IntStream.of();
-		optional = stream.average();
+		optional = stream.average();//There is nothing inside and will cause a NoSuchElementException when attempting to be read
 		//void ifPresent(DoubleConsumer consumer)
 		optional.ifPresent(System.out::println);//if present, it will print the primitive double inside the OptionalDouble
-//		System.out.println(optional.getAsDouble());//WATCH OUT : it will throw an unchecked exception if no content inside the OptionalDouble
-		
+		try{
+			System.out.println(optional.getAsDouble());//WATCH OUT : it will throw an unchecked exception if no content inside the OptionalDouble
+		} catch (Exception ex) {
+			System.out.println("Swallowed exception :"+ex);
+		}
 		//double orElseGet(DoubleSupplier other)
 		System.out.println(optional.orElseGet(() -> Double.NaN));//if present it will print the content of the Optional. If no content, it will print a constant holding a Not-a-Number
-		
+		System.out.println("\n");
 		
 		//The primitive stream implementations also add two new methods that return an optional.
-		//	long sum()
+		//1) 	long sum()  ONLY FOR primitive
 		LongStream longs = LongStream.of(5, 10);
 		long sum = longs.sum();
 		System.out.println(sum);
 		
-//		OptionalDouble average()   *
+//		//2) OptionalDouble average()* ONLY FOR primitive
 		longs = LongStream.of(5, 10);
 //		OptionalDouble average = longs.avg();//DOES NOT COMPILE because it doesn't exist
 		OptionalDouble average = longs.average();

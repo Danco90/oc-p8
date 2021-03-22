@@ -1,14 +1,10 @@
 package com.pino.project.ocpairprogramming.java8.ocp.chapter4.primitiveStream;
 
+import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.IntSummaryStatistics;
-import java.util.LongSummaryStatistics;
-import java.util.function.DoubleFunction;
-import java.util.function.DoubleSupplier;
-import java.util.function.DoubleToIntFunction;
-import java.util.function.DoubleUnaryOperator;
-import java.util.function.IntFunction;
-import java.util.function.IntToLongFunction;
+import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -113,14 +109,17 @@ public class IntLongDoubleStream {
 		doubleStream = DoubleStream.of(1.0, 2.0);
 //		intStream = doubleStream.mapToInt(s->IntStream.of(s)); //NOT POSSIBLE
 //		intStream = doubleStream.mapToInt(s->s); //NOT POSSIBLE EITHER since it cannot convert double to int
-//		intStream.forEach(System.out::print);
-//		System.out.println();
+//		intStream = doubleStream.mapToInt(s->1);//AWFUL WORKAROUND but it works. Basically, any double item cannot be transform into an int
+		intStream = doubleStream.mapToInt(s->(int)s);//VALID with explicit CAST
+		intStream.forEach(System.out::print);
+		System.out.println();
 		
 		//D.2.4 (TRICKY) LongStream mapToLong(DoubleToLongFunction mapper)
 		// mapTolong example 3 **TRICKY** LongStream mapToLong(DoubleToLongFunction mapper);
 		doubleStream= DoubleStream.of(1.0, 2.0);
 //		longStream = doubleStream.mapToLong(s->s); //NOT POSSIBLE from double to long
-//		longStream.forEach(System.out::print);
+		longStream = doubleStream.mapToLong(s->(long)s);//VALID with explicit CAST
+		longStream.forEach(System.out::print);
 		System.out.println();
 		
 		//D.3.1 mapToObj example 2 - <U> Stream<U> mapToObj(IntFunction<? extends U> mapper);
@@ -172,8 +171,9 @@ public class IntLongDoubleStream {
 		System.out.println("\nD.4.3 mapToInt example 3 **TRICKY** IntStream mapToInt(LongToIntFunction mapper);");
 		longStream= LongStream.of(1L, 2L);
 //		intStream = longStream.mapToInt(s->IntStream.of(s)); //NOT POSSIBLE
-//		intStream.forEach(System.out::print);
-//		System.out.println();
+		intStream = longStream.mapToInt(s->(int)s); //VALID with CAST
+		intStream.forEach(System.out::print);
+		System.out.println();
 		
 		//D.4.4 map example 4 - LongStream map(LongUnaryOperator mapper)
 		System.out.println("\nD.4.4 map example 4 - LongStream map(LongUnaryOperator mapper)");
@@ -182,12 +182,15 @@ public class IntLongDoubleStream {
 		lonStreamOut.forEach(System.out::print); //510
 	
 		//Approach E - <R> Stream<R> flatMapTo<Target_Primitive_Stream>(Function<? super T, ? extends <Target_Primitive_Stream >> mapper);
+		System.out.println("\nApproach E - <R> Stream<R> flatMapTo<Target_Primitive_Stream>(Function<? super T, ? extends <Target_Primitive_Stream >> mapper);");
 		//E.1.2  flatMap example 1 - DoubleStream flatMap(Function<? super T, ? extends DoubleStream> mapper);
-//		Stream<>objStream = Stream.of("penguin", "fish");
-//		doubleStream = objStream.flatMap(s->DoubleStream.of(s.length())); //7 4
-//		System.out.print("objStream.flatMapToDouble ");
-//		doubleStream.forEach(System.out::print);
-//		System.out.println();
+		List<String> l1 = Arrays.asList("penguin", "fish");
+		List<String> l2 = Arrays.asList("peno", "fino");
+//		List<String> l3 = Arrays.asList();//WATCH OUT: the empty list might throw ArrayIndexOutOfBoundException if it were accessed 
+		Stream<List<String>> objListStream = Stream.of(l1, l2/*, l3*/);
+		Stream<List<String>> objListStream2 = objListStream.flatMap(l->Stream.of(l.subList(0, 1))); //sublist of an empty list throws array OutOfBoundException
+		objListStream2.forEach(System.out::print);//[penguin][peno] sublist list with just the first elements
+		System.out.println();
 		
 		//E.1.2  flatMapToDouble example 1 - DoubleStream flatMapToDouble(Function<? super T, ? extends DoubleStream> mapper);
 		objStream = Stream.of("penguin", "fish");
@@ -246,5 +249,27 @@ public class IntLongDoubleStream {
 		
 //		longValue = doubleValue; //NO //DOES NOT COMPILE
 		
+		//Summarizing Statistics
+		IntStream ints = IntStream.of(1,2,3,4,5);
+		System.out.println("The max is :"+max(ints));
+		ints = IntStream.of(1,2,3,4,5);
+		int res = range(ints);
+		System.out.println("The range is :"+res);
+
+		
+	}
+	private static int range(IntStream ints) {
+//		OptionalInt optMax = ints.max();
+//		OptionalInt optMin = ints.min();//it will throw a exception because max() already uses up the stream
+		IntSummaryStatistics stats = ints.summaryStatistics();//Therefore we do extract both properties all in ones 
+		if(stats.getCount() == 0) throw new RuntimeException();
+		System.out.println("Min :"+stats.getMin()+", max :"+stats.getMax()
+		                  +", average :"+stats.getAverage()+", count :"+stats.getCount());
+		return stats.getMax() - stats.getMin();//Minimum subtracted from the Maximum
+	}
+	
+	private static int max(IntStream ints) {
+		OptionalInt opt = ints.max();
+		return opt.orElseThrow(RuntimeException::new);//If contains a value, we return it. Otherwise, we throw an exception
 	}
 }
