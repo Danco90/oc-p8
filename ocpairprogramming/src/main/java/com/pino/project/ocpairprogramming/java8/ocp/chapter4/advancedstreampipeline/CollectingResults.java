@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BinaryOperator;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import static java.util.stream.Collectors.toMap;
 import java.util.stream.Stream;
 
 /**
@@ -143,6 +145,15 @@ public class CollectingResults {
 								s -> s.charAt(0),
 								Collectors.minBy(Comparator.naturalOrder()))));
 		System.out.println(map10); // {5=Optional[b], 6=Optional[t]}
+		
+		//example toMap(Function k, Function v, BinaryFunction m)
+		System.out.println("\nTRICKY example toMap(Function k, Function v, BinaryFunction m)");
+		Stream<String> s = Stream.of("speak", "bark", "meow", "growl"); 
+		BinaryOperator<String> merge = (a, b) -> a;
+		Map<Integer, String> myMap = s.collect(toMap(String::length, k -> k, merge)); 
+		System.out.println(myMap.size() + " " + myMap.get(4));//(*)
+		System.out.println("myMap="+myMap);
+		//(*)WATCH OUT: It is not like  in a list. It does not retrieve the element at index but with key=4 
 		
 	}
 
