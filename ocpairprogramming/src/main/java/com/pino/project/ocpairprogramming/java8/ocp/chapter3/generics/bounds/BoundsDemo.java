@@ -103,12 +103,26 @@ public class BoundsDemo {
 		//TRICKY EXAMPLE of lower-bounded with subclasses and superclasses
 		List<Exception> onlyExceptions = Arrays.asList(new Exception());
 		List<? super IOException> exceptions = new ArrayList<Exception>();
+
 		//**Use case to BETTER understand the promise once declaring lower-bounded generics type
 		List<? super IOException> exceptions2 = new ArrayList<Exception>(onlyExceptions);//OK because when declaring type we can insert any supertype 
 		
 //		exceptions.add(new Exception());//DOES NOT COMPILE because the list could be could be List<IOException> or List<Exception> or List<Object>
 		exceptions.add(new IOException());//OK VALID, and whatever subclass of it.
 		exceptions.add(new FileNotFoundException());//such as this one
+		List<? super Exception> exceptions3 = new ArrayList<Throwable>();
+//		exceptions3.add(new Throwable());//Does not compile
+		exceptions3.add(new Exception());//OK
+		exceptions3.add(new IOException());//OK
+		exceptions3.add(new RuntimeException());//OK
+		
+		exceptions3 = new ArrayList<Object>();
+//		exceptions3.add(new Object());//Does not compile
+//		exceptions3.add(new Throwable());//Does not compile
+		exceptions3.add(new Exception());//OK
+		exceptions3.add(new IOException());//OK
+		exceptions3.add(new RuntimeException());//OK
+		
 		
 		//3.2.6 Putting It All Together
 		//**TRICKIEST and HARDIEST questions about generics**
@@ -121,6 +135,8 @@ public class BoundsDemo {
 		//Variable with upper-bunded wildcard - Example 1
 		List<? extends A> list2 = new ArrayList<A>();//OK too, as long as the list can be of whatever type subclass of A when declared, but becoming an IMMUTABLE empty list as well
 		//Indeed you can have ArrayList<A>, ArrayList<B>, or ArrayList<C> stored in that reference. 
+		list2 = new ArrayList<B>();
+		list2 = new ArrayList<C>();
 		
 		//Variable with lower-bunded wildcard - Example 1
 		List<? super A> list3 = new ArrayList<A>();//OK as well, as long as the list can contain whatever superclass of A when declared, and becoming MUTABLE, 
@@ -135,6 +151,7 @@ public class BoundsDemo {
 		//Variable with lower-bunded wildcard - Example 2
 		List<? super B> list5 = new ArrayList<A>();//Ok fine, as long as it respect the promise A super B when declaring a list not empty
         //It can contains ArrayList<A>, ArrayList<B> or ArrayList<Object>
+		
 		
 		//Variable with unbouded wildcard - Example 2
 //		List<?> list6 = new ArrayList<? extends A>();//(*)COMPIALTION ERROR as bounds are allowed only on the reference type side during the declaration
