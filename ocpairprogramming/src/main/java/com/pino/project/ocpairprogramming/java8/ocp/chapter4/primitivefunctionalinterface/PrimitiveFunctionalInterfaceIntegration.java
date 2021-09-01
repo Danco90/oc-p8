@@ -12,22 +12,22 @@ public class PrimitiveFunctionalInterfaceIntegration {
 	public static void main(String[] args) {
 		
 		//BiConsumer, BiPredicate and BiFunction are not provided because there's no point to use them.
-		//DoubleBiConsumer  NON EXISTING
-		//IntBiConsumer NON EXISTING
-		//LongBiconsumer NON EXISTING
+		//DoubleBiConsumer  EXISTING but not present in table
+		//IntBiConsumer EXISTING but not present in table
+		//LongBiconsumer EXISTING but not present in table
 		
 		//But there are kind of BiConsumer for Object and double/int/long primitive
 		ObjDoubleConsumer consumer1 = (s, i) -> System.out.printf("Consume %d %s%n", s, i);
 		ObjIntConsumer consumer2 = (s, i) -> System.out.printf("Consume %d %s%n", s, i);	
 		ObjLongConsumer consumer3 = (s, i) -> System.out.printf("Consume %d %s%n", s, i);
 		
-		//DoubleBiPredicate  NON EXISTING
-		//IntBiPredicate NON EXISTING
+		//DoubleBiPredicate  EXISTING but not present in table
+		//IntBiPredicate EXISTING but not present in table
 		//LongBiPredicate NON EXISTING
 		
-		//DoubleBiFunction NON EXISTING
-		//IntBiFunction NON EXISTING
-		//LongBiFunction NON EXISTING
+		//DoubleBiFunction EXISTING but not present in table
+		//IntBiFunction EXISTING but not present in table
+		//LongBiFunction EXISTING but not present in table
 		
 		//But there are kind of BiFunction for 2 Objects T and U and return type double/int/long primitive
 		ToDoubleBiFunction<String, Integer> bifunction1 = (s, i) -> ((s.length() + i)/2) ;

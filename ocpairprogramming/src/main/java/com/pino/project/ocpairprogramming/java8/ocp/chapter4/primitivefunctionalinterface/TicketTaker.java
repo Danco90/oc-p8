@@ -4,7 +4,7 @@ import java.util.function.IntUnaryOperator;
 
 public class TicketTaker {
 	private static int AT_CAPACITY = 100;
-	public int takeTicket(int currentCount, IntUnaryOperator counter){ /* (*) doesn't compile */
+	public int takeTicket(int currentCount, IntUnaryOperator counter){ //(*) 
 		return counter.applyAsInt(currentCount);
 	}
 	public static void main(String... theater){
@@ -20,4 +20,4 @@ public class TicketTaker {
 	}
 }
 
-//(*): IntUnaryOperator<Integer> doesn't compile. stream don't have generic type
+//(*): IntUnaryOperator<Integer> doesn't compile. Some primitive streams are stream don't have generic type because it is obvious what the return type is.

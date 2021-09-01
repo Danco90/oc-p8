@@ -54,7 +54,8 @@ public class Duck implements Comparable<Duck> {
 		Comparator<Duck> byWeight5 = (Duck d1, Duck d2) -> {return d1.getWeight()
 																- d2.getWeight(); };
 		System.out.println("Sorting by weight2 (lambda)");
-		Collections.sort(ducks, byWeight2); // sort by weight2 (lambda)
+//		Collections.sort(ducks, byWeight2);
+		Collections.sort(ducks, (d1, d2) -> d1.getWeight()-d2.getWeight()); // sort by weight2 (lambda)
 		System.out.println(ducks); // [Quack,Puddles]
 		//Whereas, not as a method reference because there's no compatibility
 	} 
